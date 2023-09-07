@@ -3,6 +3,7 @@ from app.config import Development, Test, Production
 from flask import Flask
 from app import blueprints
 from app.extensions import db
+from app.extensions import ma
 from app.models.product import Product
 
 ENV = os.environ.get('FLASK_ENV', 'DEVELOP')
@@ -25,4 +26,5 @@ def register_blueprints(app):
 
 def register_extensions(app):
     db.init_app(app)
+    ma.init_app(app)
     return app

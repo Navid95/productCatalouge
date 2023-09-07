@@ -17,28 +17,41 @@ def for_test():
     product.varieties.append(product_variety)
     db.session.add(product_price)
     db.session.commit()
-    print(f'product: {product.json()}')
-    print(f'product_price: {product_price.json()}')
-    print(f'product_variety: {product_variety.json()}')
     return {
-               'product': product.json(),
-               'product_price': product_price.json(),
-               'product_variety': product_variety.json()
+               'product': product_schema.dump(product),
            }, 201
 
 
-@api1.route('/<product_id>')
-def get_product_by_id(product_id: int):
+@api1.route('/<uuid:product_id>')
+def get_product_by_id(product_id):
     # product = db.session.execute(select(Product).where(Product.id == product_id)).first()[0]
+    # NODO remember either use UUID(str - default) or uuid: blah in URL
     product = db.session.scalar(select(Product).where(Product.id == product_id))
-    print(product.__class__)
-    return product.json()
+    return product_schema.dump(product)
 
 
 @api1.route('/list')
 def get_product_list():
     products = db.session.scalars(select(Product).order_by(Product.id))
 
-    return {
-        'products': [p.json() for p in products]
-    }
+    return product_schema.dump(products)
+
+
+@api1.route('/pricings')
+def get_product_pricing_list():
+    product_pricing = db.session.scalars(select(ProductPricing).order_by(ProductPricing.id))
+    print(product_pricing)
+    return {'pricings': [product_pricing_schema.dump(x) for x in product_pricing]}
+
+
+@api1.route('/varieties')
+def get_product_variety_list():
+    product_pricing = db.session.scalars(select(ProductPricing).order_by(ProductPricing.id))
+    print(product_pricing)
+    return {'pricings': [product_pricing_schema.dump(x) for x in product_pricing]}
+
+
+@api1.route('/variety/<uuid:id>')
+def get_product_variety_by_id(id):
+    product_variety = db.session.scalar(select(ProductVariety).where(ProductVariety.id == id))
+    return product_variety_schema.dump(product_variety)
