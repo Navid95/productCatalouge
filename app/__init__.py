@@ -1,8 +1,9 @@
 import os
-from .config import Development, Test, Production
+from app.config import Development, Test, Production
 from flask import Flask
-from . import blueprints
-from . extensions import SQLAlchemy
+from app import blueprints
+from app.extensions import db
+from app.models.product import Product
 
 ENV = os.environ.get('FLASK_ENV', 'DEVELOP')
 configurations = [Development, Test, Production]
@@ -23,6 +24,5 @@ def register_blueprints(app):
 
 
 def register_extensions(app):
-    db = SQLAlchemy()
     db.init_app(app)
     return app
