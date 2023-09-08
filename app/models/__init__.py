@@ -2,7 +2,10 @@ import datetime
 from uuid import UUID
 from uuid import uuid4
 
+from marshmallow import post_load
+
 from app.extensions import db
+from app.extensions import ma
 
 
 class BaseModel(db.Model):
@@ -22,3 +25,10 @@ class BaseModel(db.Model):
         onupdate=datetime.datetime.now,
         nullable=False
     )
+
+
+class BaseSchema(ma.SQLAlchemyAutoSchema):
+
+    @post_load
+    def make_user(self, data, **kwargs):
+        return self.Meta.model(**data)
