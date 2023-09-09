@@ -30,8 +30,6 @@ def for_test():
 
 @api1.route('/<uuid:product_id>')
 def get_product_by_id(product_id):
-    # product = db.session.execute(select(Product).where(Product.id == product_id)).first()[0]
-    # NODO remember either use UUID(str - default) or uuid: blah in URL
     product = db.session.scalar(select(Product).where(Product.id == product_id))
     return product_schema.dump(product)
 
@@ -84,8 +82,8 @@ def get_category_by_id(id):
 
 @api1.route('/category', methods=['POST'])
 def load_test():
-    # NODO create a decorator for deserialization
-    # NODO create a decorator for serialization
+    # NODO 1000: create a decorator for deserialization
+    # NODO 1000: create a decorator for serialization
     try:
         data = {
             "created": "2023-09-08T14:32:59.090028",
