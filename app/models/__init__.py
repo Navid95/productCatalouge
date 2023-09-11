@@ -34,16 +34,11 @@ class BaseModel(db.Model):
     # NODO 1000: add setters to prevent updating of id, created, updated
 
     @classmethod
-    def read(cls, id: UUID):
-        model_object = db.session.scalar(select(cls).where(cls.id == id).where(cls.active == True))
-        if not model_object:
-            return None
-        return model_object
-
-    @classmethod
-    def create(cls, model_object):
+    def save(cls, model_object):
         if not isinstance(model_object, cls):
             return None
+        if model_object.id:
+            return None
         try:
             db.session.add(model_object)
             db.session.commit()
@@ -53,21 +48,13 @@ class BaseModel(db.Model):
         return model_object
 
     @classmethod
-    def delete(cls, id: UUID):
-        model_object, code = cls.read(id)
-        if not model_object:
-            return False
-        model_object.active = False
-        try:
-            db.session.add(model_object)
-            db.session.commit()
-            return True
-        except BaseException as e:
-            print(e)
+    def get(cls, id: UUID):
+        model_object = db.session.scalar(select(cls).where(cls.id == id).where(cls.active == True))
+        return model_object
 
     @classmethod
-    def update(cls, id: UUID, **kwargs):
-        model_object = cls.read(id)
+    def patch(cls, id: UUID, **kwargs):
+        model_object = cls.get(id)
         if not model_object:
             return None
         for key, value in kwargs.items():
@@ -85,6 +72,31 @@ class BaseModel(db.Model):
             except BaseException as e:
                 print(e)
                 return None
+
+    @classmethod
+    def put(cls, model_object):
+        if not model_object.id:
+            return None
+        try:
+            db.session.add(model_object)
+            db.session.commit()
+        except BaseException as e:
+            print(e)
+            return None
+        return model_object
+
+    @classmethod
+    def delete(cls, id: UUID):
+        model_object = cls.get(id)
+        if not model_object:
+            return False
+        model_object.active = False
+        try:
+            db.session.add(model_object)
+            db.session.commit()
+            return True
+        except BaseException as e:
+            print(e)
 
 
 class BaseSchema(ma.SQLAlchemyAutoSchema):

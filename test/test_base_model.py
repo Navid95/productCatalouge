@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 
 from app import create_app, Test
@@ -62,6 +64,10 @@ def test_model_put(app):
     assert example1.updated == example2.updated
     assert example2.text == sample_text
 
+    example2.id = None
+
+    assert not Example.put(example2)
+
 
 def test_model_delete(app):
     example1 = Example()
@@ -70,3 +76,4 @@ def test_model_delete(app):
     Example.delete(id1)
 
     assert not Example.get(id1)
+    assert not Example.delete(uuid.uuid4())
