@@ -11,6 +11,7 @@ class Development(DefaultConfig):
 
 class Test(DefaultConfig):
     env_name = 'TEST'
+    TESTING = True
 
 
 class Production(DefaultConfig):
