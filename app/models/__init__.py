@@ -1,9 +1,12 @@
-import datetime
+from datetime import datetime
 from uuid import UUID
 from uuid import uuid4
 
 from marshmallow import post_load
 from sqlalchemy import select
+from sqlalchemy import inspect
+from sqlalchemy.exc import NoInspectionAvailable
+from sqlalchemy.orm import InstanceState
 
 from app.extensions import db
 from app.extensions import ma
@@ -15,15 +18,16 @@ class BaseModel(db.Model):
         primary_key=True,
         default=uuid4
     )
-    created: db.Mapped[datetime.datetime] = db.mapped_column(
+    created: db.Mapped[datetime] = db.mapped_column(
         db.DateTime,
-        default=datetime.datetime.now,
+        default=datetime.now,
         nullable=False
     )
-    updated: db.Mapped[datetime.datetime] = db.mapped_column(
+    # NODO change datetimes to UTC format
+    updated: db.Mapped[datetime] = db.mapped_column(
         db.DateTime,
-        default=datetime.datetime.now,
-        onupdate=datetime.datetime.now,
+        default=datetime.now,
+        onupdate=datetime.now,
         nullable=False
     )
     active: db.Mapped[bool] = db.mapped_column(
@@ -31,7 +35,20 @@ class BaseModel(db.Model):
         index=True
     )
 
-    # NODO 1000: add setters to prevent updating of id, created, updated
+    def to_json(self):
+        object_dict = dict()
+        for column in inspect(self).mapper.column_attrs:
+            value = getattr(self, column.key)
+            if isinstance(value, datetime):
+                object_dict[column.key] = value.isoformat()
+            elif isinstance(value, BaseModel):
+                object_dict[column.key] = value.to_json()
+            else:
+                object_dict[column.key] = value
+
+        return object_dict
+
+    # NODO 1000: implement __eq__()
 
     @classmethod
     def save(cls, model_object):
@@ -101,6 +118,6 @@ class BaseModel(db.Model):
 
 class BaseSchema(ma.SQLAlchemyAutoSchema):
 
-    @post_load
-    def make_user(self, data, **kwargs):
+    @post_load(pass_many=True)
+    def make_model(self, data, **kwargs):
         return self.Meta.model(**data)

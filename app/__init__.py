@@ -4,7 +4,6 @@ from flask import Flask
 from app import blueprints
 from app.extensions import db
 from app.extensions import ma
-from app.models.product import Product
 
 ENV = os.environ.get('FLASK_ENV', 'DEVELOP')
 configurations = [Development, Test, Production]

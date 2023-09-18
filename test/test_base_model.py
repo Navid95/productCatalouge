@@ -1,10 +1,12 @@
 import uuid
-
 import pytest
 
+from marshmallow import EXCLUDE
+from sqlalchemy.orm import InstanceState
+
 from app import create_app, Test
-from test.models.example import Example
-from app.extensions import db
+from test.models.example import Example, ExampleSchema
+from app.extensions import db, ma
 
 
 @pytest.fixture()
@@ -43,8 +45,7 @@ def test_model_patch(app):
     example1 = Example()
     Example.save(example1)
     updated_time1 = example1.updated
-    example1.active = False
-    Example.patch(example1.id, active=example1.active)
+    Example.patch(example1.id, active=False)
 
     assert updated_time1 != example1.updated
 
@@ -77,3 +78,19 @@ def test_model_delete(app):
 
     assert not Example.get(id1)
     assert not Example.delete(uuid.uuid4())
+
+
+def test_model_to_json(app):
+    example1 = Example()
+    Example.save(example1)
+    assert isinstance(example1.to_json(), dict)
+    example2 = Example()
+    assert isinstance(example2.to_json(), dict)
+
+
+def test_schema_load(app):
+    example1 = Example(text='blah')
+    Example.save(example1)
+    schema1 = ExampleSchema()
+    example2 = schema1.load(data=example1.to_json(), unknown=EXCLUDE)
+    assert example1.active == example2.active
