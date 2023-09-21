@@ -51,7 +51,7 @@ class BaseModel(db.Model):
     # NODO 1000: implement __eq__()
 
     @classmethod
-    def save(cls, model_object):
+    def post(cls, model_object):
         if not isinstance(model_object, cls):
             return None
         if model_object.id:

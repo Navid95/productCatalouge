@@ -4,7 +4,7 @@ import pytest
 from marshmallow import EXCLUDE
 
 from app import create_app, Test
-from test.models.example import SingleParent, ParentSchema, Child
+from test.models.example import SingleParent, ParentSchema, Child, SchoolClass
 from app.extensions import db
 
 
@@ -26,16 +26,16 @@ def app():
 def test_model_save(app):
     parent = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent)
+    assert SingleParent.post(parent)
     assert parent.id
-    assert not SingleParent.save(parent)
-    assert not SingleParent.save(list([1, 2, 3]))
+    assert not SingleParent.post(parent)
+    assert not SingleParent.post(list([1, 2, 3]))
 
 
 def test_model_get(app):
     parent1 = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent1)
+    assert SingleParent.post(parent1)
 
     parent2 = SingleParent.get(parent1.id)
 
@@ -45,7 +45,7 @@ def test_model_get(app):
 def test_model_patch(app):
     parent1 = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent1)
+    assert SingleParent.post(parent1)
 
     updated_time1 = parent1.updated
 
@@ -64,7 +64,7 @@ def test_model_patch(app):
 def test_model_put(app):
     parent1 = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent1)
+    assert SingleParent.post(parent1)
 
     sample_text = f'test_model_put'
     parent1.name = sample_text
@@ -81,7 +81,7 @@ def test_model_put(app):
 def test_model_delete(app):
     parent1 = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent1)
+    assert SingleParent.post(parent1)
 
     id1 = parent1.id
 
@@ -93,7 +93,7 @@ def test_model_delete(app):
 def test_model_to_json(app):
     parent1 = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent1)
+    assert SingleParent.post(parent1)
     assert isinstance(parent1.to_json(), dict)
 
     example2 = SingleParent(name='parent2')
@@ -104,7 +104,7 @@ def test_model_to_json(app):
 def test_schema_load(app):
     parent1 = SingleParent(name='parent1')
 
-    assert SingleParent.save(parent1)
+    assert SingleParent.post(parent1)
 
     schema1 = ParentSchema()
     parent2 = schema1.load(data=parent1.to_json(), unknown=EXCLUDE)
@@ -117,9 +117,9 @@ def test_one_to_many(app):
     child1 = Child(name="child1")
     child2 = Child(name="child2")
 
-    assert SingleParent.save(parent)
-    assert Child.save(child1)
-    assert Child.save(child2)
+    assert SingleParent.post(parent)
+    assert Child.post(child1)
+    assert Child.post(child2)
 
     parent.children.append(child1)
 
@@ -135,3 +135,36 @@ def test_one_to_many(app):
     assert child1 in parent.children
     assert Child.delete(child1.id)
     assert child1 not in parent.children
+
+    child3 = Child(name='child3')
+    child3.parent = parent
+
+    assert Child.post(child3)
+    assert child3 in parent.children
+
+
+def test_many_to_many(app):
+    school_class1 = SchoolClass(name='class1')
+    child1 = Child(name='child1')
+
+    assert SchoolClass.post(school_class1)
+    assert Child.post(child1)
+
+    school_class1.attendees.append(child1)
+
+    assert SchoolClass.put(school_class1)
+
+    school_class2 = SchoolClass.get(school_class1.id)
+
+    assert school_class2
+    assert child1 in school_class2.attendees
+    assert Child.delete(child1.id)
+    assert child1 not in school_class2.attendees
+
+    child2 = Child(name='child2')
+    child2.classes.append(school_class2)
+
+    assert Child.post(child2)
+    assert child2 in school_class2.attendees
+    assert SchoolClass.delete(school_class2.id)
+    assert school_class2 not in child2.classes
