@@ -61,6 +61,7 @@ class BaseModel(db.Model):
             db.session.commit()
         except BaseException as e:
             print(e)
+            db.session.rollback()
             return None
         return model_object
 
@@ -76,8 +77,6 @@ class BaseModel(db.Model):
             return None
         for key, value in kwargs.items():
             try:
-                if not hasattr(model_object, key):
-                    return None
                 setattr(model_object, key, value)
             except BaseException as e:
                 print(e)
@@ -88,6 +87,7 @@ class BaseModel(db.Model):
                 return model_object
             except BaseException as e:
                 print(e)
+                db.session.rollback()
                 return None
 
     @classmethod
@@ -99,6 +99,7 @@ class BaseModel(db.Model):
             db.session.commit()
         except BaseException as e:
             print(e)
+            db.session.rollback()
             return None
         return model_object
 
@@ -114,6 +115,8 @@ class BaseModel(db.Model):
             return True
         except BaseException as e:
             print(e)
+            db.session.rollback()
+            return False
 
 
 class BaseSchema(ma.SQLAlchemyAutoSchema):

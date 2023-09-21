@@ -2,11 +2,10 @@ import uuid
 import pytest
 
 from marshmallow import EXCLUDE
-from sqlalchemy.orm import InstanceState
 
 from app import create_app, Test
-from test.models.example import Example, ExampleSchema
-from app.extensions import db, ma
+from test.models.example import SingleParent, ParentSchema, Child
+from app.extensions import db
 
 
 @pytest.fixture()
@@ -25,72 +24,114 @@ def app():
 
 
 def test_model_save(app):
-    example = Example()
-    Example.save(example)
+    parent = SingleParent(name='parent1')
 
-    assert example.id
-    assert not Example.save(example)
-    assert not Example.save(list([1, 2, 3]))
+    assert SingleParent.save(parent)
+    assert parent.id
+    assert not SingleParent.save(parent)
+    assert not SingleParent.save(list([1, 2, 3]))
 
 
 def test_model_get(app):
-    example1 = Example()
-    Example.save(example1)
-    example2 = Example.get(example1.id)
+    parent1 = SingleParent(name='parent1')
 
-    assert example1 == example2
+    assert SingleParent.save(parent1)
+
+    parent2 = SingleParent.get(parent1.id)
+
+    assert parent1 == parent2
 
 
 def test_model_patch(app):
-    example1 = Example()
-    Example.save(example1)
-    updated_time1 = example1.updated
-    Example.patch(example1.id, active=False)
+    parent1 = SingleParent(name='parent1')
 
-    assert updated_time1 != example1.updated
+    assert SingleParent.save(parent1)
 
-    example1.blah = 'wow'
+    updated_time1 = parent1.updated
 
-    assert not Example.patch(example1.id, blah='blah')
+    assert SingleParent.patch(parent1.id, name='parent1 edited')
+    assert updated_time1 != parent1.updated
+
+    parent1.blah = 'wow'
+
+    assert SingleParent.patch(parent1.id, blah='blah')
+
+    parent2 = SingleParent.get(parent1.id)
+
+    assert hasattr(parent2, 'blah')
 
 
 def test_model_put(app):
-    example1 = Example()
-    Example.save(example1)
+    parent1 = SingleParent(name='parent1')
+
+    assert SingleParent.save(parent1)
+
     sample_text = f'test_model_put'
-    example1.text = sample_text
-    Example.put(example1)
-    example2 = Example.get(example1.id)
+    parent1.name = sample_text
 
-    assert example1.updated == example2.updated
-    assert example2.text == sample_text
+    assert SingleParent.put(parent1)
 
-    example2.id = None
+    parent2 = SingleParent.get(parent1.id)
 
-    assert not Example.put(example2)
+    assert parent2
+    assert parent1.updated == parent2.updated
+    assert parent2.name == sample_text
 
 
 def test_model_delete(app):
-    example1 = Example()
-    Example.save(example1)
-    id1 = example1.id
-    Example.delete(id1)
+    parent1 = SingleParent(name='parent1')
 
-    assert not Example.get(id1)
-    assert not Example.delete(uuid.uuid4())
+    assert SingleParent.save(parent1)
+
+    id1 = parent1.id
+
+    assert SingleParent.delete(id1)
+    assert not SingleParent.get(id1)
+    assert not SingleParent.delete(uuid.uuid4())
 
 
 def test_model_to_json(app):
-    example1 = Example()
-    Example.save(example1)
-    assert isinstance(example1.to_json(), dict)
-    example2 = Example()
+    parent1 = SingleParent(name='parent1')
+
+    assert SingleParent.save(parent1)
+    assert isinstance(parent1.to_json(), dict)
+
+    example2 = SingleParent(name='parent2')
+
     assert isinstance(example2.to_json(), dict)
 
 
 def test_schema_load(app):
-    example1 = Example(text='blah')
-    Example.save(example1)
-    schema1 = ExampleSchema()
-    example2 = schema1.load(data=example1.to_json(), unknown=EXCLUDE)
-    assert example1.active == example2.active
+    parent1 = SingleParent(name='parent1')
+
+    assert SingleParent.save(parent1)
+
+    schema1 = ParentSchema()
+    parent2 = schema1.load(data=parent1.to_json(), unknown=EXCLUDE)
+
+    assert parent1.active == parent2.active
+
+
+def test_one_to_many(app):
+    parent = SingleParent(name='parent1')
+    child1 = Child(name="child1")
+    child2 = Child(name="child2")
+
+    assert SingleParent.save(parent)
+    assert Child.save(child1)
+    assert Child.save(child2)
+
+    parent.children.append(child1)
+
+    assert SingleParent.put(parent)
+    assert child1.parent_id == parent.id
+    assert parent.patch(parent.id, children=[child2])
+    assert not (child1.parent_id == parent.id)
+    assert child2.parent_id == parent.id
+
+    child1.parent_id = parent.id
+
+    assert Child.put(child1)
+    assert child1 in parent.children
+    assert Child.delete(child1.id)
+    assert child1 not in parent.children
