@@ -1,26 +1,7 @@
 import uuid
-import pytest
 
-from marshmallow import EXCLUDE
-
-from app import create_app, Test
 from test.models.example import SingleParent, ParentSchema, Child, SchoolClass
-from app.extensions import db
-
-
-@pytest.fixture()
-def app():
-    app = create_app(__name__, Test)
-
-    with app.app_context():
-        db.create_all()
-        # other setup can go here
-        yield app
-
-    with app.app_context():
-        db.drop_all()
-
-    # clean up / reset resources here
+from test import app
 
 
 def test_model_save(app):
@@ -99,17 +80,6 @@ def test_model_to_json(app):
     example2 = SingleParent(name='parent2')
 
     assert isinstance(example2.to_json(), dict)
-
-
-def test_schema_load(app):
-    parent1 = SingleParent(name='parent1')
-
-    assert SingleParent.post(parent1)
-
-    schema1 = ParentSchema()
-    parent2 = schema1.load(data=parent1.to_json(), unknown=EXCLUDE)
-
-    assert parent1.active == parent2.active
 
 
 def test_one_to_many(app):

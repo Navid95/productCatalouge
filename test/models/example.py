@@ -1,10 +1,12 @@
 from uuid import UUID
 from typing import List
 
+import marshmallow.fields
 from sqlalchemy import Table
 
 from app.models import BaseModel, BaseSchema
 from app.extensions import db
+from app.extensions import ma
 
 child_class = Table(
     "child_class",
@@ -52,12 +54,19 @@ class ParentSchema(BaseSchema):
     class Meta:
         model = SingleParent
 
+    children = ma.auto_field()
+
 
 class ChildSchema(BaseSchema):
     class Meta:
         model = Child
 
+    parent = ma.auto_field()
+    classes = ma.auto_field()
+
 
 class SchoolClassSchema(BaseSchema):
     class Meta:
         model = SchoolClass
+
+    attendees = ma.auto_field()

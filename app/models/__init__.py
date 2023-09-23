@@ -5,8 +5,6 @@ from uuid import uuid4
 from marshmallow import post_load
 from sqlalchemy import select
 from sqlalchemy import inspect
-from sqlalchemy.exc import NoInspectionAvailable
-from sqlalchemy.orm import InstanceState
 
 from app.extensions import db
 from app.extensions import ma
