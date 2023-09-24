@@ -5,6 +5,7 @@ from sqlalchemy import Table
 
 from app.models import BaseModel, BaseSchema
 from app.extensions import db
+from app.extensions import ma
 
 child_class = Table(
     "child_class",
@@ -49,15 +50,28 @@ class SchoolClass(BaseModel):
 
 
 class ParentSchema(BaseSchema):
+    __envelope__ = {'single': 'parent', 'many': 'parents'}
+
     class Meta:
         model = SingleParent
 
+    children = ma.auto_field()
+
 
 class ChildSchema(BaseSchema):
+    __envelope__ = {'single': 'child', 'many': 'children'}
+
     class Meta:
         model = Child
 
+    parent = ma.auto_field()
+    classes = ma.auto_field()
+
 
 class SchoolClassSchema(BaseSchema):
+    __envelope__ = {'single': 'schoolClass', 'many': 'schoolClasses'}
+
     class Meta:
         model = SchoolClass
+
+    attendees = ma.auto_field()
