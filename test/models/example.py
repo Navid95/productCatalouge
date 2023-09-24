@@ -1,7 +1,6 @@
 from uuid import UUID
 from typing import List
 
-import marshmallow.fields
 from sqlalchemy import Table
 
 from app.models import BaseModel, BaseSchema

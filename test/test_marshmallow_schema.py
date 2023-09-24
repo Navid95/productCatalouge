@@ -11,8 +11,6 @@ from test.models.example import Child
 from test.models.example import ChildSchema
 from test.models.example import SchoolClass
 from test.models.example import SchoolClassSchema
-from test.models.example import BaseModel
-from test.models.example import BaseSchema
 
 
 def test_dump_dict(app):
