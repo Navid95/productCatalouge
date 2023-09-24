@@ -3,6 +3,7 @@ from uuid import UUID
 from uuid import uuid4
 
 from marshmallow import post_load
+from marshmallow import post_dump
 from sqlalchemy import select
 from sqlalchemy import inspect
 
@@ -122,3 +123,9 @@ class BaseSchema(ma.SQLAlchemyAutoSchema):
     @post_load(pass_many=True)
     def make_model(self, data, **kwargs):
         return self.Meta.model(**data)
+
+    @post_dump(pass_many=True)
+    def handle_single_or_collection(self, data, **kwargs):
+        if kwargs.get('many', False):
+            return {self.__envelope__.get('many', 'models'): data}
+        return {self.__envelope__.get('single', 'model'): data}

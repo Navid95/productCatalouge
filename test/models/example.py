@@ -51,6 +51,8 @@ class SchoolClass(BaseModel):
 
 
 class ParentSchema(BaseSchema):
+    __envelope__ = {'single': 'parent', 'many': 'parents'}
+
     class Meta:
         model = SingleParent
 
@@ -58,6 +60,8 @@ class ParentSchema(BaseSchema):
 
 
 class ChildSchema(BaseSchema):
+    __envelope__ = {'single': 'child', 'many': 'children'}
+
     class Meta:
         model = Child
 
@@ -66,6 +70,8 @@ class ChildSchema(BaseSchema):
 
 
 class SchoolClassSchema(BaseSchema):
+    __envelope__ = {'single': 'schoolClass', 'many': 'schoolClasses'}
+
     class Meta:
         model = SchoolClass
 
