@@ -3,7 +3,8 @@ from typing import List
 
 from sqlalchemy import Table
 
-from app.models import BaseModel, BaseSchema
+from app.models import BaseModel
+from app.models import BaseSchema
 from app.extensions import db
 from app.extensions import ma
 
@@ -49,7 +50,7 @@ class SchoolClass(BaseModel):
 # marshmallow schemas
 
 
-class ParentSchema(BaseSchema):
+class SingleParentSchema(BaseSchema):
     __envelope__ = {'single': 'parent', 'many': 'parents'}
 
     class Meta:

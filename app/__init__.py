@@ -19,7 +19,6 @@ def create_app(name, config=Development):
 
 
 def register_blueprints(app):
-    app.register_blueprint(blueprints.api1)
     return app
 
 
