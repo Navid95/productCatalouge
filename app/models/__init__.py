@@ -3,7 +3,9 @@ from uuid import UUID
 from uuid import uuid4
 
 from marshmallow import post_load
+from marshmallow import pre_load
 from marshmallow import post_dump
+from marshmallow import ValidationError
 from sqlalchemy import select
 from sqlalchemy import inspect
 
@@ -119,6 +121,7 @@ class BaseModel(db.Model):
 
 
 class BaseSchema(ma.SQLAlchemyAutoSchema):
+    __envelope__ = {'single': 'model', 'many': 'models'}
 
     @post_load(pass_many=True)
     def make_model(self, data, **kwargs):
@@ -129,3 +132,15 @@ class BaseSchema(ma.SQLAlchemyAutoSchema):
         if kwargs.get('many', False):
             return {self.__envelope__.get('many', 'models'): data}
         return {self.__envelope__.get('single', 'model'): data}
+
+
+    @pre_load(pass_many=True)
+    def load_with_wrapper(self, data, **kwargs):
+        if kwargs.get('many', False):
+            key = self.__envelope__.get('many', 'models')
+        else:
+            key = self.__envelope__.get('single', 'model')
+        if key not in data.keys():
+            raise ValidationError(f'key: {key}, is missing in input data')
+        else:
+            return data[key]

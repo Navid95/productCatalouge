@@ -94,7 +94,7 @@ def test_load_class_and_fields():
     parent1.created = time1
     parent1.updated = time1
     schema = ParentSchema()
-    loaded_parent = schema.load(parent1.to_json())
+    loaded_parent = schema.load({'parent': parent1.to_json()})
 
     assert isinstance(loaded_parent, SingleParent)
     assert loaded_parent.id == parent1.id
@@ -113,4 +113,4 @@ def test_load_validation_error_handling():
     parent1.updated = 12
     schema = ParentSchema()
     with raises(ValidationError):
-        schema.load(parent1.to_json())
+        schema.load({'parent': parent1.to_json()})
