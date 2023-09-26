@@ -54,8 +54,7 @@ class SingleParentSchema(BaseSchema):
 
     class Meta:
         model = SingleParent
-
-    children = ma.auto_field()
+        include_relationships = True
 
 
 class ChildSchema(BaseSchema):
@@ -63,9 +62,7 @@ class ChildSchema(BaseSchema):
 
     class Meta:
         model = Child
-
-    parent = ma.auto_field()
-    classes = ma.auto_field()
+        include_relationships = True
 
 
 class SchoolClassSchema(BaseSchema):
@@ -73,5 +70,4 @@ class SchoolClassSchema(BaseSchema):
 
     class Meta:
         model = SchoolClass
-
-    attendees = ma.auto_field()
+        include_relationships = True
