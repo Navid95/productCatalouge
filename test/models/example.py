@@ -49,7 +49,7 @@ class SchoolClass(BaseModel):
 # marshmallow schemas
 
 
-class ParentSchema(BaseSchema):
+class SingleParentSchema(BaseSchema):
     __envelope__ = {'single': 'parent', 'many': 'parents'}
 
     class Meta:

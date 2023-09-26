@@ -6,7 +6,7 @@ from marshmallow import ValidationError
 
 from test import app
 from test.models.example import SingleParent
-from test.models.example import ParentSchema
+from test.models.example import SingleParentSchema
 from test.models.example import Child
 from test.models.example import ChildSchema
 from test.models.example import SchoolClass
@@ -15,7 +15,7 @@ from test.models.example import SchoolClassSchema
 
 def test_dump_dict(app):
     parent1 = SingleParent(name='parent1')
-    schema = ParentSchema()
+    schema = SingleParentSchema()
 
     assert isinstance(schema.dump(parent1), dict)
 
@@ -25,7 +25,7 @@ def test_dump_single_field_keys(app):
     child1 = Child(name='child1')
     parent1.children.append(child1)
     SingleParent.post(parent1)
-    schema = ParentSchema()
+    schema = SingleParentSchema()
     parent_dict = schema.dump(parent1)
 
     assert 'id' in parent_dict.get('parent', {}).keys()
@@ -61,7 +61,7 @@ def test_dump_single_field_keys(app):
 
 
 def test_dump_many_field_keys(app):
-    parent_schema = ParentSchema()
+    parent_schema = SingleParentSchema()
     child_schema = ChildSchema()
     school_class_schema = SchoolClassSchema()
 
@@ -93,7 +93,7 @@ def test_load_class_and_fields():
     time1 = datetime.now()
     parent1.created = time1
     parent1.updated = time1
-    schema = ParentSchema()
+    schema = SingleParentSchema()
     loaded_parent = schema.load({'parent': parent1.to_json()})
 
     assert isinstance(loaded_parent, SingleParent)
@@ -111,6 +111,6 @@ def test_load_validation_error_handling():
     time1 = datetime.now()
     parent1.created = time1
     parent1.updated = 12
-    schema = ParentSchema()
+    schema = SingleParentSchema()
     with raises(ValidationError):
         schema.load({'parent': parent1.to_json()})

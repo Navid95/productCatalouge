@@ -1,6 +1,6 @@
 import uuid
 
-from test.models.example import SingleParent, ParentSchema, Child, SchoolClass
+from test.models.example import SingleParent, SingleParentSchema, Child, SchoolClass
 from test import app
 
 
