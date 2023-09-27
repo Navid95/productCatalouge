@@ -93,7 +93,7 @@ class BaseModel(db.Model):
 
     @classmethod
     def put(cls, model_object):
-        if not model_object.id:
+        if not cls.get(model_object.id):
             return None
         try:
             db.session.add(model_object)
