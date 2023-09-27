@@ -1,7 +1,6 @@
-import datetime
 import uuid
 import pytest
-from threading import Thread
+
 from marshmallow import EXCLUDE
 
 from app import create_app, Test
