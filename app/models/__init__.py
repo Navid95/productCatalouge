@@ -143,7 +143,6 @@ class BaseSchema(ma.SQLAlchemyAutoSchema):
             return {self.__envelope__.get('many', 'models'): data}
         return {self.__envelope__.get('single', 'model'): data}
 
-
     @pre_load(pass_many=True)
     def load_with_wrapper(self, data, **kwargs):
         if kwargs.get('many', False):
