@@ -72,3 +72,7 @@ class SchoolClassSchema(BaseSchema):
     class Meta:
         model = SchoolClass
         include_relationships = True
+
+
+# relationships
+SchoolClassSchema.children = ma.Nested(ChildSchema)
