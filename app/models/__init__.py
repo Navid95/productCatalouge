@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 from uuid import UUID
 from uuid import uuid4
@@ -15,6 +16,9 @@ from app.extensions import ma
 
 class BaseModel(db.Model):
     __abstract__ = True
+    __put_ignore_set__ = {'id', 'created', 'updated', 'active'}
+    __patch_ignore_set__ = copy.deepcopy(__put_ignore_set__)
+
     id: db.Mapped[UUID] = db.mapped_column(
         primary_key=True,
         default=uuid4
@@ -77,32 +81,38 @@ class BaseModel(db.Model):
         if not model_object:
             return None
         for key, value in kwargs.items():
-            try:
-                setattr(model_object, key, value)
-            except BaseException as e:
-                print(e)
-                return None
-            try:
-                db.session.add(model_object)
-                db.session.commit()
-                return model_object
-            except BaseException as e:
-                print(e)
-                db.session.rollback()
-                return None
+            if key not in cls.__patch_ignore_set__:
+                try:
+                    setattr(model_object, key, value)
+                except BaseException as e:
+                    print(e)
+                    return None
+        try:
+            db.session.add(model_object)
+            db.session.commit()
+            return model_object
+        except BaseException as e:
+            print(e)
+            db.session.rollback()
+            return None
 
     @classmethod
     def put(cls, model_object):
-        if not cls.get(model_object.id):
+        server_object = cls.get(model_object.id)
+        if not server_object:
             return None
         try:
-            db.session.add(model_object)
+            for column in inspect(model_object).mapper.column_attrs:
+                value = getattr(model_object, column.key)
+                if column.key not in cls.__put_ignore_set__:
+                    setattr(server_object, column.key, value)
+            db.session.add(server_object)
             db.session.commit()
         except BaseException as e:
             print(e)
             db.session.rollback()
             return None
-        return model_object
+        return server_object
 
     @classmethod
     def delete(cls, id: UUID):

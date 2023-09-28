@@ -8,21 +8,28 @@ from test import app
 
 def test_model_save(app):
     parent = SingleParent(name='parent1')
+    parent = SingleParent.post(parent)
 
-    assert SingleParent.post(parent)
+    assert parent
     assert parent.id
+    assert parent.created
+    assert parent.updated
     assert not SingleParent.post(parent)
     assert not SingleParent.post(list([1, 2, 3]))
+
+    parent2 = SingleParent(name='parent2')
+    parent2.id = parent.id
+    parent2 = SingleParent.post(parent2)
+    assert not parent2
 
 
 def test_model_get(app):
     parent1 = SingleParent(name='parent1')
-
-    assert SingleParent.post(parent1)
-
+    SingleParent.post(parent1)
     parent2 = SingleParent.get(parent1.id)
 
     assert parent1 == parent2
+    assert not SingleParent.get(uuid.uuid4())
 
 
 def test_model_patch(app):
@@ -30,11 +37,14 @@ def test_model_patch(app):
 
     assert SingleParent.post(parent1)
 
+    created_time1 = parent1.created
     updated_time1 = parent1.updated
 
     assert SingleParent.patch(parent1.id, name='parent1 edited')
     assert updated_time1 != parent1.updated
+    assert created_time1 == parent1.created
 
+    updated2 = parent1.updated
     parent1.blah = 'wow'
 
     assert SingleParent.patch(parent1.id, blah='blah')
@@ -50,14 +60,16 @@ def test_model_put(app):
     assert SingleParent.post(parent1)
 
     sample_text = f'test_model_put'
+    created1 = parent1.created
+    updated1 = parent1.updated
     parent1.name = sample_text
-
-    assert SingleParent.put(parent1)
-
-    parent2 = SingleParent.get(parent1.id)
+    id1 = parent1.id
+    parent2 = SingleParent.put(parent1)
 
     assert parent2
-    assert parent1.updated == parent2.updated
+    assert parent2.id == id1
+    assert parent2.created == created1
+    assert parent2.updated != updated1
     assert parent2.name == sample_text
 
 
