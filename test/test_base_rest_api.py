@@ -17,7 +17,7 @@ def test_get_api(client):
 def test_post_api(client):
     parent1 = SingleParent(name='parent1')
     parent_schema = SingleParentSchema(only=('name', 'children'))
-    response = client.post(f'/parents/', json=parent_schema.dump(parent1))
+    response = client.post(f'/parents', json=parent_schema.dump(parent1))
     assert response.status_code == 200
     assert 'parent' in response.json.keys()
 
@@ -25,7 +25,7 @@ def test_post_api(client):
 def test_put_api(client):
     parent1 = SingleParent(name='parent1')
     parent_schema = SingleParentSchema(only=('name', 'children'))
-    response = client.post(f'/parents/', json=parent_schema.dump(parent1))
+    response = client.post(f'/parents', json=parent_schema.dump(parent1))
 
     assert response.status_code == 200
     assert 'parent' in response.json.keys()
@@ -35,9 +35,25 @@ def test_put_api(client):
     parent_schema2 = SingleParentSchema(exclude=('created', 'updated', 'children'))
     json_data = parent_schema2.dump(parent1)
     json_data['parent']['name'] = 'updated name for parent 1'
-    response2 = client.put(f'/parents/', json=json_data)
+    response2 = client.put(f'/parents', json=json_data)
 
     assert response2.status_code == 200
     assert 'parent' in response2.json.keys()
     assert response2.json['parent']
     assert response2.json['parent']['name'] == json_data['parent']['name']
+
+
+def test_get_all(client):
+    parent1 = SingleParent(name='parent1')
+    parent2 = SingleParent(name='parent2')
+    parent3 = SingleParent(name='parent3')
+    parent_schema = SingleParentSchema(only=('name', 'children'))
+
+    assert client.post(f'/parents', json=parent_schema.dump(parent1)).status_code == 200
+    assert client.post(f'/parents', json=parent_schema.dump(parent2)).status_code == 200
+    assert client.post(f'/parents', json=parent_schema.dump(parent3)).status_code == 200
+
+    response = client.get(f'/parents', query_string={'page': '1'})
+
+    assert response.status_code == 200
+    assert len(response.json['parents']) == 3

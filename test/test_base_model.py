@@ -152,3 +152,27 @@ def test_many_to_many(app):
     assert child2 in school_class2.attendees
     assert SchoolClass.delete(school_class2.id)
     assert school_class2 not in child2.classes
+
+
+def test_get_all(app):
+    for i in range(0, 100):
+        parent = SingleParent(name=f'parent{i+1}')
+        SingleParent.post(parent)
+    parents = SingleParent.get_all(limit=10, page=1)
+
+    assert len(parents) == 10
+
+    parents2 = SingleParent.get_all(limit=10, page=2)
+    parents3 = SingleParent.get_all(limit=10, page=1)
+
+    assert len(parents2) == 10
+
+    parents1_set = set()
+    parents2_set = set()
+    parents3_set = set()
+    parents1_set.update(parents)
+    parents2_set.update(parents2)
+    parents3_set.update(parents3)
+
+    assert parents1_set.difference(parents2_set)
+    assert not parents1_set.difference(parents3_set)

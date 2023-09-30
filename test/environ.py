@@ -1,2 +1,2 @@
 SQLALCHEMY_DATABASE_URI = 'sqlite:///test.db'
-SQLALCHEMY_ECHO = True
+# SQLALCHEMY_ECHO = True

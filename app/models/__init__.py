@@ -129,6 +129,15 @@ class BaseModel(db.Model):
             db.session.rollback()
             return False
 
+    @classmethod
+    def get_all(cls, limit: int = None, page: int = None):
+        model_object_list = db.paginate(
+            select(cls).where(cls.active == True),
+            per_page=limit,
+            page=page
+        )
+        return model_object_list.items
+
 
 class BaseSchema(ma.SQLAlchemyAutoSchema):
     __envelope__ = {'single': 'model', 'many': 'models'}

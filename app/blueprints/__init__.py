@@ -20,7 +20,7 @@ class BaseRestAPIById(MethodView):
         return schema.dump(self.__model__.get(id))
 
 
-class BaseRestAPIByModelData(MethodView):
+class BaseRestAPI(MethodView):
     init_every_request = False
 
     def __init__(self, model: BaseModel, schema: BaseSchema):
@@ -44,3 +44,15 @@ class BaseRestAPIByModelData(MethodView):
         except ValidationError as err:
             return err.messages
         return dump_schema.dump(self.__model__.put(model_object))
+
+    def get(self):
+        try:
+            page = int(request.args.get('page', 1))
+            limit = int(request.args.get('limit', 10))
+        except BaseException as err:
+            print(err)
+            page = 1
+            limit = 10
+        dump_schema = self.__schema__()
+        return dump_schema.dump(self.__model__.get_all(limit=limit, page=page), many=True)
+
