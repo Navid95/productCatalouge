@@ -57,3 +57,21 @@ def test_get_all(client):
 
     assert response.status_code == 200
     assert len(response.json['parents']) == 3
+
+
+def test_delete(client):
+    parent1 = SingleParent(name='parent1')
+    parent2 = SingleParent(name='parent2')
+    parent3 = SingleParent(name='parent3')
+    parent_schema = SingleParentSchema(only=('name', 'children'))
+    load_schema = SingleParentSchema()
+    parent1 = load_schema.load(client.post(f'/parents', json=parent_schema.dump(parent1)).json)
+    parent2 = load_schema.load(client.post(f'/parents', json=parent_schema.dump(parent2)).json)
+    parent3 = load_schema.load(client.post(f'/parents', json=parent_schema.dump(parent3)).json)
+
+    response = client.delete(f'/parents/{parent1.id}')
+
+    assert response.status_code == 200
+    assert response.json['response'] == True
+
+    assert client.get(f'/parents/{parent1.id.__str__()}').json.get('parent', {}) == {}

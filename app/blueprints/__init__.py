@@ -19,6 +19,9 @@ class BaseRestAPIById(MethodView):
         schema = self.__schema__()
         return schema.dump(self.__model__.get(id))
 
+    def delete(self, id: UUID):
+        return {'response': self.__model__.delete(id)}
+
 
 class BaseRestAPI(MethodView):
     init_every_request = False
