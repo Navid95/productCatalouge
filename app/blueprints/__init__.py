@@ -10,10 +10,10 @@ from app.models import BaseSchema
 
 class BaseRestAPIById(MethodView):
     """
-    Base class of all Single-Resource HATEOAS driven REST APIs.
+    Generic class of all REST APIs.
 
     For a given model of type BaseModel produces bellow http resource end points:
-    GET , DELETE -> /model/id
+    GET , DELETE -> /models/id
 
     Is a child class of flask's MethodView.
 
@@ -59,13 +59,37 @@ class BaseRestAPIById(MethodView):
 
 
 class BaseRestAPI(MethodView):
+    """
+    Generic class of all REST APIs.
+
+    For a given model of type BaseModel produces bellow http resource end points:
+    POST , PUT, GET -> /models/
+
+    Is a child class of flask's MethodView.
+
+    Class Variables:
+
+    - init_every_request: If false instructs flask to use 1 instance for all incoming requests which is useful if the
+    state of the object should be shared across requests, By-default it is False.
+
+        """
     init_every_request = False
 
     def __init__(self, model: BaseModel, schema: BaseSchema):
+        """
+        Initiate the object.
+
+        :param model: Model to use in methods.
+        :param schema: Schema to use in serialization/deserialization.
+        """
         self.__model__ = model
         self.__schema__ = schema
 
     def post(self):
+        """
+        HTTP POST, create the resource by given data in request body.
+        :return: Serialized presentation of the resource
+        """
         load_schema = self.__schema__(exclude=('id', 'created', 'updated', 'active'))
         dump_schema = self.__schema__()
         try:
@@ -75,6 +99,10 @@ class BaseRestAPI(MethodView):
         return dump_schema.dump(self.__model__.post(model_object))
 
     def put(self):
+        """
+        HTTP PUT, update the resource by given data in request body.
+        :return: Serialized presentation of the resource
+        """
         load_schema = self.__schema__(exclude=('created', 'updated'))
         dump_schema = self.__schema__()
         try:
@@ -84,6 +112,13 @@ class BaseRestAPI(MethodView):
         return dump_schema.dump(self.__model__.put(model_object))
 
     def get(self):
+        """
+        HTTP GET, retrieve all resources, 'limit' and 'page' URL parameters are used for pagination.
+
+        note: limit and page default values are 10 and 1 respectively.
+
+        :return: Serialized presentation of the resources
+        """
         try:
             page = int(request.args.get('page', 1))
             limit = int(request.args.get('limit', 10))
