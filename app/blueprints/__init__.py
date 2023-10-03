@@ -17,7 +17,11 @@ class BaseRestAPIById(MethodView):
 
     def get(self, id: UUID):
         schema = self.__schema__()
-        return schema.dump(self.__model__.get(id))
+        model_object = self.__model__.get(id)
+        if model_object:
+            return schema.dump(model_object)
+        else:
+            return {}
 
     def delete(self, id: UUID):
         return {'response': self.__model__.delete(id)}
@@ -59,3 +63,16 @@ class BaseRestAPI(MethodView):
         dump_schema = self.__schema__()
         return dump_schema.dump(self.__model__.get_all(limit=limit, page=page), many=True)
 
+
+class BaseRestAPIRelationshipById(MethodView):
+    init_every_request = False
+
+    def __init__(self, model: BaseModel, relationship_schema: BaseSchema, relationship_key: str):
+        self.__model__ = model
+        self.__relationship_schema__ = relationship_schema
+        self.__relationship_key__ = relationship_key
+
+    def get(self, id: UUID):
+        schema = self.__relationship_schema__()
+        model = self.__model__.get(id)
+        return schema.dump(getattr(model, self.__relationship_key__), many=True)

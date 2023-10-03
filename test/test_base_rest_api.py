@@ -6,72 +6,118 @@ from test.models.example import Child
 
 
 def test_get_api(client):
-    parent1 = SingleParent(name='parent1')
-    SingleParent.post(parent1)
-    response = client.get(f'/parents/{parent1.id.__str__()}')
-    assert response.status_code == 200
-    response = client.get(f'/parents/1')
-    assert response.status_code == 404
+    with client:
+        parent1 = SingleParent(name='parent1')
+        SingleParent.post(parent1)
+        response = client.get(f'/parents/{str(parent1.id)}')
+
+        assert response.status_code == 200
+
+        response = client.get(f'/parents/1')
+
+        assert response.status_code == 404
+
+        parent1.children.append(Child(name='child1'))
+        SingleParent.put(parent1)
+
+        response = client.get(f'parents/{str(parent1.id)}/children')
+        assert parent1.children
+        assert response.status_code == 200
+        assert response.json['children']
+
+        response = client.get(f'/parents/{str(parent1.id)}')
+
+        assert response.status_code == 200
+        assert response.json['parent'].get('links', None)
+        assert f'/parents/{str(parent1.id)}/children' == response.json['parent']['links']['children']['url']
 
 
 def test_post_api(client):
-    parent1 = SingleParent(name='parent1')
-    parent_schema = SingleParentSchema(only=('name', 'children'))
-    response = client.post(f'/parents', json=parent_schema.dump(parent1))
-    assert response.status_code == 200
-    assert 'parent' in response.json.keys()
+    with client:
+        parent1 = SingleParent(name='parent1')
+        parent_schema = SingleParentSchema(only=['name'])
+        response = client.post(f'/parents', json=parent_schema.dump(parent1))
+        assert response.status_code == 200
+        assert 'parent' in response.json.keys()
 
 
 def test_put_api(client):
-    parent1 = SingleParent(name='parent1')
-    parent_schema = SingleParentSchema(only=('name', 'children'))
-    response = client.post(f'/parents', json=parent_schema.dump(parent1))
+    with client:
+        parent1 = SingleParent(name='parent1')
+        parent_schema = SingleParentSchema(only=['name'])
+        response = client.post(f'/parents', json=parent_schema.dump(parent1))
 
-    assert response.status_code == 200
-    assert 'parent' in response.json.keys()
-    assert response.json['parent']
+        assert response.status_code == 200
+        assert 'parent' in response.json.keys()
+        assert response.json['parent']
 
-    parent1 = SingleParentSchema().load({'parent': response.json['parent']})
-    parent_schema2 = SingleParentSchema(exclude=('created', 'updated', 'children'))
-    json_data = parent_schema2.dump(parent1)
-    json_data['parent']['name'] = 'updated name for parent 1'
-    response2 = client.put(f'/parents', json=json_data)
+        json_data = {'parent': response.json['parent']}
+        del json_data['parent']['links']
+        parent1 = SingleParentSchema().load(json_data)
+        parent_schema2 = SingleParentSchema(exclude=('created', 'updated'))
+        json_data = parent_schema2.dump(parent1)
+        json_data['parent']['name'] = 'updated name for parent 1'
+        del json_data['parent']['links']
+        response2 = client.put(f'/parents', json=json_data)
 
-    assert response2.status_code == 200
-    assert 'parent' in response2.json.keys()
-    assert response2.json['parent']
-    assert response2.json['parent']['name'] == json_data['parent']['name']
+        assert response2.status_code == 200
+        assert 'parent' in response2.json.keys()
+        assert response2.json['parent']
+        assert response2.json['parent']['name'] == json_data['parent']['name']
 
 
 def test_get_all(client):
-    parent1 = SingleParent(name='parent1')
-    parent2 = SingleParent(name='parent2')
-    parent3 = SingleParent(name='parent3')
-    parent_schema = SingleParentSchema(only=('name', 'children'))
+    with client:
+        parent1 = SingleParent(name='parent1')
+        parent2 = SingleParent(name='parent2')
+        parent3 = SingleParent(name='parent3')
+        parent_schema = SingleParentSchema(only=['name'])
 
-    assert client.post(f'/parents', json=parent_schema.dump(parent1)).status_code == 200
-    assert client.post(f'/parents', json=parent_schema.dump(parent2)).status_code == 200
-    assert client.post(f'/parents', json=parent_schema.dump(parent3)).status_code == 200
+        assert client.post(f'/parents', json=parent_schema.dump(parent1)).status_code == 200
+        assert client.post(f'/parents', json=parent_schema.dump(parent2)).status_code == 200
+        assert client.post(f'/parents', json=parent_schema.dump(parent3)).status_code == 200
 
-    response = client.get(f'/parents', query_string={'page': '1'})
+        response = client.get(f'/parents', query_string={'page': '1'})
 
-    assert response.status_code == 200
-    assert len(response.json['parents']) == 3
+        assert response.status_code == 200
+        assert len(response.json['parents']) == 3
 
 
 def test_delete(client):
-    parent1 = SingleParent(name='parent1')
-    parent2 = SingleParent(name='parent2')
-    parent3 = SingleParent(name='parent3')
-    parent_schema = SingleParentSchema(only=('name', 'children'))
-    load_schema = SingleParentSchema()
-    parent1 = load_schema.load(client.post(f'/parents', json=parent_schema.dump(parent1)).json)
-    parent2 = load_schema.load(client.post(f'/parents', json=parent_schema.dump(parent2)).json)
-    parent3 = load_schema.load(client.post(f'/parents', json=parent_schema.dump(parent3)).json)
+    with client:
+        parent1 = SingleParent(name='parent1')
+        parent2 = SingleParent(name='parent2')
+        parent3 = SingleParent(name='parent3')
+        parent_schema = SingleParentSchema(only=['name'])
+        load_schema = SingleParentSchema()
 
-    response = client.delete(f'/parents/{parent1.id}')
+        parent1_response = client.post(f'/parents', json=parent_schema.dump(parent1)).json
+        parent2_response = client.post(f'/parents', json=parent_schema.dump(parent2)).json
+        parent3_response = client.post(f'/parents', json=parent_schema.dump(parent3)).json
+        del parent1_response['parent']['links']
+        del parent2_response['parent']['links']
+        del parent3_response['parent']['links']
 
-    assert response.status_code == 200
-    assert response.json['response'] == True
+        parent1 = load_schema.load(parent1_response)
+        parent2 = load_schema.load(parent2_response)
+        parent3 = load_schema.load(parent3_response)
 
-    assert client.get(f'/parents/{parent1.id.__str__()}').json.get('parent', {}) == {}
+        response = client.delete(f'/parents/{parent1.id}')
+
+        assert response.status_code == 200
+        assert response.json['response'] == True
+
+        assert client.get(f'/parents/{str(parent1.id)}').json.get('parent', {}) == {}
+
+
+def test_get_relationship(client):
+    with client:
+        parent1 = SingleParent(name='parent1')
+        parent1.children.append(Child(name='child1'))
+        parent1.children.append(Child(name='child2'))
+        SingleParent.post(parent1)
+        response = client.get(f'/parents/{str(parent1.id)}')
+        url = response.json['parent']['links']['children']['url']
+        response = client.get(url)
+        assert response.status_code == 200
+        assert 'children' in response.json.keys()

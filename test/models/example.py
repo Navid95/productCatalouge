@@ -55,7 +55,15 @@ class SingleParentSchema(BaseSchema):
 
     class Meta:
         model = SingleParent
-        include_relationships = True
+
+    links = ma.Hyperlinks({
+        'children': {
+            'url': ma.URLFor('parent-children', values=dict(id='<id>')),
+            'method': 'GET'
+        }
+    },
+        dump_only=True
+    )
 
 
 class ChildSchema(BaseSchema):
@@ -75,4 +83,4 @@ class SchoolClassSchema(BaseSchema):
 
 
 # relationships
-SchoolClassSchema.children = ma.Nested(ChildSchema)
+# SingleParentSchema.children = ma.List(ma.HyperlinkRelated(endpoint='parent-children', url_key='id'))
