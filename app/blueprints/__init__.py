@@ -131,17 +131,45 @@ class BaseRestAPI(MethodView):
 
 
 class BaseRestAPIRelationshipById(MethodView):
+    """
+    Generic class of all REST APIs.
+
+    For a given model of type BaseModel produces bellow http resource end points for its sub-resources:
+    GET -> /models/id/sub-resources
+
+    Is a child class of flask's MethodView.
+
+    Class Variables:
+
+    - init_every_request: If false instructs flask to use 1 instance for all incoming requests which is useful if the
+    state of the object should be shared across requests, By-default it is False.
+    """
     init_every_request = False
 
-    def __init__(self, model: BaseModel, relationship_schema: BaseSchema, relationship_key: str):
+    def __init__(self, model: BaseModel, sub_resource_schema: BaseSchema, sub_resource_key: str):
+        """
+        Initiate the object.
+
+        :param model: Model to use in methods.
+        :param sub_resource_schema: Schema to use in serialization/deserialization (sub-resources).
+        :param sub_resource_key: The attribute name of the sub-resource on model (i.e model.key)
+        """
         self.__model__ = model
-        self.__relationship_schema__ = relationship_schema
-        self.__relationship_key__ = relationship_key
+        self.__sub_resource_schema__ = sub_resource_schema
+        self.__sub_resource_key__ = sub_resource_key
 
     def get(self, id: UUID):
-        schema = self.__relationship_schema__()
+        """
+        HTTP GET, retrieve all sub-resources.
+
+        note: getattr(model, self.__sub_resource_key__) is used!
+
+        :param id: The id of the resource (model) on DB.
+        :return: Serialized presentation of the sub-resources
+        """
+        schema = self.__sub_resource_schema__()
         model = self.__model__.get(id)
-        return schema.dump(getattr(model, self.__relationship_key__), many=True)
+        return schema.dump(getattr(model, self.__sub_resource_key__), many=True)
 
     # NODO develop put for relation under a top level resource
 
