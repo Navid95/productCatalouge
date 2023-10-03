@@ -1,3 +1,13 @@
+"""
+Module contains implementations as examples for BaseClass, BaseClassSchema.
+
+It is recommended to follow same patterns in real implementations.
+
+- 'primaryjoin' arg is used to retrieve only active instances in relationships.
+- 'secondaryjoin' arg is used to retrieve only active instances in relationships.
+
+"""
+
 from uuid import UUID
 from typing import List
 
@@ -8,6 +18,10 @@ from app.models import BaseSchema
 from app.extensions import db
 from app.extensions import ma
 
+
+"""
+Association table for a many-to-many relationship.
+"""
 child_class = Table(
     "child_class",
     BaseModel.metadata,
@@ -80,7 +94,3 @@ class SchoolClassSchema(BaseSchema):
     class Meta:
         model = SchoolClass
         include_relationships = True
-
-
-# relationships
-# SingleParentSchema.children = ma.List(ma.HyperlinkRelated(endpoint='parent-children', url_key='id'))
