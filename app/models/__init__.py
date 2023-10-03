@@ -279,6 +279,8 @@ class BaseSchema(ma.SQLAlchemyAutoSchema):
         :param data: Data passed to schema.load().
         :param kwargs: Kwargs passed to schema.load().
         :return: Raw data for deserialization
+
+        :raises ValidationError If label is missing from input data.
         """
         if kwargs.get('many', False):
             key = self.__envelope__.get('many', 'models')
