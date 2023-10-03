@@ -2,6 +2,7 @@ import copy
 from datetime import datetime
 from uuid import UUID
 from uuid import uuid4
+from typing import Optional
 
 from marshmallow import post_load
 from marshmallow import pre_load
@@ -15,6 +16,30 @@ from app.extensions import ma
 
 
 class BaseModel(db.Model):
+    """
+    Base class of all db models.
+
+    All models should inherit from this class to get the CRUD operations as class_methods and can use BaseSchema(marshmallow)
+    for serialization/deserialization operations.
+
+    Model attributes:
+     id (UUID): Primary key of the table, used for all operations on DB that needs to be done on a specific instance, auto generated.
+     created (datetime): Time of instance creation, auto generated.
+     updated (datetime): Time of the latest update of the instance, auto generated.
+     active (bool): Flag to determine if instance is available or deleted, defaults to True (available).
+
+    __abstract__ : Instructs sqlalchemy not to create a table for this class. __abstract__ is not inherited by child
+    classes, meaning if there is a need to create a class without a DB table associated with it this class variable
+    should be set to 'True' explicitly.
+
+    __put_ignore_set__: Attributes in this set will be skipped during updates with put method. By-default it contains
+    'id', 'created', 'updated' and 'active'.
+
+    __patch_ignore_set__: Attributes in this set will be skipped during updates with patch method. Initially this list
+    is a deep copy of __put_ignore_set__. By-default it contains 'id', 'created', 'updated' and 'active'.
+
+
+    """
     __abstract__ = True
     __put_ignore_set__ = {'id', 'created', 'updated', 'active'}
     __patch_ignore_set__ = copy.deepcopy(__put_ignore_set__)
@@ -40,7 +65,14 @@ class BaseModel(db.Model):
         index=True
     )
 
-    def to_json(self):
+    def to_json(self) -> dict:
+        """
+        Return a dict containing db columns of the model.
+
+        Uses sqlalchemy inspect to find the columns.
+
+        :return: Json representation of the object as a python dict
+        """
         object_dict = dict()
         for column in inspect(self).mapper.column_attrs:
             value = getattr(self, column.key)
@@ -56,7 +88,15 @@ class BaseModel(db.Model):
     # NODO 1000: implement __eq__()
 
     @classmethod
-    def post(cls, model_object):
+    def post(cls, model_object) -> Optional[object]:
+        """
+        Create a new model object in the DB.
+
+        If any exception happens, calls rollback() method of sqlalchemy.
+
+        :param model_object: A python object of the class 'cls'.
+        :return: Created object on DB | None
+        """
         if not isinstance(model_object, cls):
             return None
         if model_object.id:
@@ -71,12 +111,28 @@ class BaseModel(db.Model):
         return model_object
 
     @classmethod
-    def get(cls, id: UUID):
+    def get(cls, id: UUID) -> Optional[object]:
+        """
+        Retrieve the object associated with the given id from DB.
+
+        :param id: The id of the object on DB.
+        :return: Retrieved object from DB | None
+        """
         model_object = db.session.scalar(select(cls).where(cls.id == id).where(cls.active == True))
         return model_object
 
     @classmethod
-    def patch(cls, id: UUID, **kwargs):
+    def patch(cls, id: UUID, **kwargs) -> Optional[object]:
+        """
+        Update the object having the id given on DB.
+
+        Only given columns (attributes) in kwargs will be updated, rest of the columns will remain intact.
+        If any exception happens, calls rollback() method of sqlalchemy.
+
+        :param id: The id of the object on DB.
+        :param kwargs: Columns of the object and their respective value.
+        :return: Updated object on DB | None
+        """
         model_object = cls.get(id)
         if not model_object:
             return None
@@ -97,7 +153,17 @@ class BaseModel(db.Model):
             return None
 
     @classmethod
-    def put(cls, model_object):
+    def put(cls, model_object) -> Optional[object]:
+        """
+        Update the object having the same id as the given object on DB.
+
+        All columns (attributes) of the object will be updated. Loops over the given object's columns using the
+        sqlalchemy inspect func to find the columns and update the DB instance (retrieved by id).
+        If any exception happens, calls rollback() method of sqlalchemy.
+
+        :param model_object: A python object of the class 'cls'.
+        :return: Updated object on DB | None
+        """
         server_object = cls.get(model_object.id)
         if not server_object:
             return None
@@ -115,7 +181,16 @@ class BaseModel(db.Model):
         return server_object
 
     @classmethod
-    def delete(cls, id: UUID):
+    def delete(cls, id: UUID) -> bool:
+        """
+        Soft delete the object on DB by given id.
+
+        Sets the active flag of the object to False and persists it on DB.
+        If any exception happens, calls rollback() method of sqlalchemy.
+
+        :param id: The id of the object on DB.
+        :return: True on success | False
+        """
         model_object = cls.get(id)
         if not model_object:
             return False
@@ -130,7 +205,17 @@ class BaseModel(db.Model):
             return False
 
     @classmethod
-    def get_all(cls, limit: int = None, page: int = None):
+    def get_all(cls, limit: int = 10, page: int = 1) -> list[object | None]:
+        """
+        Retrieve the list of all objects of class 'cls' from DB.
+
+        Only active == True objects will be retrieved.
+        Limit and page parameters will be passed to sqlalchemy's paginate func (per_page, page respectively).
+
+        :param limit: Number of objects to return.
+        :param page: Number of the page.
+        :return: List of objects | empty list
+        """
         model_object_list = db.paginate(
             select(cls).where(cls.active == True),
             per_page=limit,

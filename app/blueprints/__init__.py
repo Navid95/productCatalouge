@@ -76,3 +76,6 @@ class BaseRestAPIRelationshipById(MethodView):
         schema = self.__relationship_schema__()
         model = self.__model__.get(id)
         return schema.dump(getattr(model, self.__relationship_key__), many=True)
+
+    # NODO develop put for relation under a top level resource
+
