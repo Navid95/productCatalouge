@@ -17,27 +17,29 @@ from app.extensions import ma
 
 class BaseModel(db.Model):
     """
-    Base class of all db models.
+    Base class of all DB models.
 
     All models should inherit from this class to get the CRUD operations as class_methods and can use BaseSchema(marshmallow)
     for serialization/deserialization operations.
 
     Model attributes:
-     id (UUID): Primary key of the table, used for all operations on DB that needs to be done on a specific instance, auto generated.
-     created (datetime): Time of instance creation, auto generated.
-     updated (datetime): Time of the latest update of the instance, auto generated.
-     active (bool): Flag to determine if instance is available or deleted, defaults to True (available).
 
-    __abstract__ : Instructs sqlalchemy not to create a table for this class. __abstract__ is not inherited by child
+     - id (UUID): Primary key of the table, used for all operations on DB that needs to be done on a specific instance, auto generated.
+     - created (datetime): Time of instance creation, auto generated.
+     - updated (datetime): Time of the latest update of the instance, auto generated.
+     - active (bool): Flag to determine if instance is available or deleted, defaults to True (available).
+
+    Class Variables:
+
+    - __abstract__: Instructs sqlalchemy not to create a table for this class. __abstract__ is not inherited by child
     classes, meaning if there is a need to create a class without a DB table associated with it this class variable
     should be set to 'True' explicitly.
 
-    __put_ignore_set__: Attributes in this set will be skipped during updates with put method. By-default it contains
+    - __put_ignore_set__: Attributes in this set will be skipped during updates with put method. By-default it contains
     'id', 'created', 'updated' and 'active'.
 
-    __patch_ignore_set__: Attributes in this set will be skipped during updates with patch method. Initially this list
+    - __patch_ignore_set__: Attributes in this set will be skipped during updates with patch method. Initially this list
     is a deep copy of __put_ignore_set__. By-default it contains 'id', 'created', 'updated' and 'active'.
-
 
     """
     __abstract__ = True
@@ -225,20 +227,59 @@ class BaseModel(db.Model):
 
 
 class BaseSchema(ma.SQLAlchemyAutoSchema):
+    """
+    Base class of all Marshmallow schemas.
+
+    All schemas should inherit from this class to get the pre_load, post_load, pre_dump and post_dump operations.
+    Child classes should contain 'class Meta' with 'model = cls(BaseModel)'.
+
+    Class Variables:
+
+    - __envelope__: This dict contains singular and collection labels for the model that will be used in
+    wrapping/unwrapping the data, By-default labels are 'model' for single and 'models' for many.
+
+    note: Child classes should overwrite this dict values (keys should not be changed! ).
+    """
+
     __envelope__ = {'single': 'model', 'many': 'models'}
 
     @post_load(pass_many=True)
     def make_model(self, data, **kwargs):
+        """
+        Return object instead of dict after deserialization.
+
+        :param data: Data passed to schema.load().
+        :param kwargs: Kwargs passed to schema.load().
+        :return: self.Meta.model(**data)
+        """
         return self.Meta.model(**data)
 
     @post_dump(pass_many=True)
     def handle_single_or_collection(self, data, **kwargs):
+        """
+        Wrapp the serialized presentation with appropriate labeling based on the 'many' keyword's value.
+        Attribute self.__envelope__ is used to get labels.
+        If 'many' is not available in kwargs, it is considered as False and single label is used.
+
+        :param data: Data passed to schema.dump().
+        :param kwargs: Kwargs passed to schema.dump().
+        :return: { label : data }
+        """
         if kwargs.get('many', False):
             return {self.__envelope__.get('many', 'models'): data}
         return {self.__envelope__.get('single', 'model'): data}
 
     @pre_load(pass_many=True)
     def load_with_wrapper(self, data, **kwargs):
+        """
+        Unwrap the data before deserialization based on the 'many' keyword's value.
+        Attribute self.__envelope__ is used to get labels.
+        If 'many' is not available in kwargs, it is considered as False and single label is used.
+
+        :param data: Data passed to schema.load().
+        :param kwargs: Kwargs passed to schema.load().
+        :return: Raw data for deserialization
+        """
         if kwargs.get('many', False):
             key = self.__envelope__.get('many', 'models')
         else:
