@@ -9,13 +9,39 @@ from app.models import BaseSchema
 
 
 class BaseRestAPIById(MethodView):
+    """
+    Base class of all Single-Resource HATEOAS driven REST APIs.
+
+    For a given model of type BaseModel produces bellow http resource end points:
+    GET , DELETE -> /model/id
+
+    Is a child class of flask's MethodView.
+
+    Class Variables:
+
+    - init_every_request: If false instructs flask to use 1 instance for all incoming requests which is useful if the
+    state of the object should be shared across requests, By-default it is False.
+
+    """
     init_every_request = False
 
     def __init__(self, model: BaseModel, schema: BaseSchema):
+        """
+        Initiate the object.
+
+        :param model: Model to use in methods.
+        :param schema: Schema to use in serialization/deserialization.
+        """
         self.__model__ = model
         self.__schema__ = schema
 
     def get(self, id: UUID):
+        """
+        HTTP GET, retrieve resource by given id.
+
+        :param id: The id of the resource on DB.
+        :return: Serialized presentation of the resource
+        """
         schema = self.__schema__()
         model_object = self.__model__.get(id)
         if model_object:
@@ -24,6 +50,11 @@ class BaseRestAPIById(MethodView):
             return {}
 
     def delete(self, id: UUID):
+        """
+        HTTP DELETE, delete resource by given id.
+        :param id: The id of the resource on DB.
+        :return: bool
+        """
         return {'response': self.__model__.delete(id)}
 
 
