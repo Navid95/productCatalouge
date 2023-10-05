@@ -248,11 +248,21 @@ class BaseSchema(ma.SQLAlchemyAutoSchema):
         """
         Return object instead of dict after deserialization.
 
+        If 'many' is available and set to True in kwargs, a list of models will be returned.
+
         :param data: Data passed to schema.load().
         :param kwargs: Kwargs passed to schema.load().
-        :return: self.Meta.model(**data)
+        :return: self.Meta.model(**data) | list[models]
         """
-        return self.Meta.model(**data)
+        many = kwargs.get('many', False)
+
+        if not many:
+            return self.Meta.model(**data)
+        else:
+            models = list()
+            for item in data:
+                models.append(self.Meta.model(**item))
+            return models
 
     @post_dump(pass_many=True)
     def handle_single_or_collection(self, data, **kwargs):

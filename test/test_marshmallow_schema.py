@@ -49,8 +49,7 @@ def test_dump_single_field_keys(client):
         assert 'updated' in child_dict.get('child', {}).keys()
         assert 'active' in child_dict.get('child', {}).keys()
         assert 'name' in child_dict.get('child', {}).keys()
-        assert 'parent' in child_dict.get('child', {}).keys()
-        assert 'classes' in child_dict.get('child', {}).keys()
+        assert 'parent_id' in child_dict.get('child', {}).keys()
 
         school_class_schema = SchoolClassSchema()
         school_class_dict = school_class_schema.dump(school_class1)
@@ -60,7 +59,6 @@ def test_dump_single_field_keys(client):
         assert 'updated' in school_class_dict.get('schoolClass', {}).keys()
         assert 'active' in school_class_dict.get('schoolClass', {}).keys()
         assert 'name' in school_class_dict.get('schoolClass', {}).keys()
-        assert 'attendees' in school_class_dict.get('schoolClass', {}).keys()
 
 
 def test_dump_many_field_keys(client):

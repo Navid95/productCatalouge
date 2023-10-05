@@ -130,7 +130,7 @@ class BaseRestAPI(MethodView):
         return dump_schema.dump(self.__model__.get_all(limit=limit, page=page), many=True)
 
 
-class BaseRestAPIRelationshipById(MethodView):
+class BaseRestAPIRelationshipByModelId(MethodView):
     """
     Generic class of all REST APIs.
 
@@ -146,17 +146,22 @@ class BaseRestAPIRelationshipById(MethodView):
     """
     init_every_request = False
 
-    def __init__(self, model: BaseModel, sub_resource_schema: BaseSchema, sub_resource_key: str):
+    def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
+                 sub_resource_key: str, many: bool = True):
         """
         Initiate the object.
 
         :param model: Model to use in methods.
+        :param sub_resource: Sub-resource model to use in methods.
         :param sub_resource_schema: Schema to use in serialization/deserialization (sub-resources).
-        :param sub_resource_key: The attribute name of the sub-resource on model (i.e model.key)
+        :param sub_resource_key: The attribute name of the sub-resource on model (i.e model.key).
+        :param many: Indicating if the relationship is with a single object or a collection of objects.
         """
         self.__model__ = model
+        self.__sub_resource__ = sub_resource
         self.__sub_resource_schema__ = sub_resource_schema
         self.__sub_resource_key__ = sub_resource_key
+        self.__many__ = many
 
     def get(self, id: UUID):
         """
@@ -169,7 +174,47 @@ class BaseRestAPIRelationshipById(MethodView):
         """
         schema = self.__sub_resource_schema__()
         model = self.__model__.get(id)
-        return schema.dump(getattr(model, self.__sub_resource_key__), many=True)
+        return schema.dump(getattr(model, self.__sub_resource_key__), many=self.__many__)
 
-    # NODO develop put for relation under a top level resource
+    def put(self, id: UUID):
+        """
 
+        :param id:
+        :return:
+        """
+        model = self.__model__.get(id)
+        dump_schema = self.__sub_resource_schema__()
+        load_schema = self.__sub_resource_schema__(only=['id'], many=self.__many__)
+        sub_resource_list = load_schema.load(request.json, many=self.__many__)
+        if self.__many__:
+            sub_resources = list()
+            for sub_resource_instance in sub_resource_list:
+                sub_resource = self.__sub_resource__.get(sub_resource_instance.id)
+                if sub_resource:
+                    sub_resources.append(sub_resource)
+            setattr(model, self.__sub_resource_key__, sub_resources)
+        else:
+            sub_resource = self.__sub_resource__.get(sub_resource_list)
+            if sub_resource:
+                setattr(model, self.__sub_resource_key__, sub_resource)
+
+        put_result = self.__model__.put(model)
+
+        return dump_schema.dump(getattr(model, self.__sub_resource_key__), many=self.__many__)
+
+
+class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
+    init_every_request = False
+
+    def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
+                 sub_resource_key: str):
+        self.__model__ = model
+        self.__sub_resource__ = sub_resource
+        self.__sub_resource_schema__ = sub_resource_schema
+        self.__sub_resource_key__ = sub_resource_key
+
+    def get(self, model_id: UUID, sub_resource_id: UUID):
+        pass
+
+    def delete(self, model_id: UUID, sub_resource_id: UUID):
+        pass

@@ -4,7 +4,7 @@ from app import create_app
 from app import Test
 from app.blueprints import BaseRestAPIById
 from app.blueprints import BaseRestAPI
-from app.blueprints import BaseRestAPIRelationshipById
+from app.blueprints import BaseRestAPIRelationshipByModelId
 from app.extensions import db
 from test.models.example import SingleParent
 from test.models.example import SingleParentSchema
@@ -26,8 +26,8 @@ def app():
     app.add_url_rule(f"/children/<uuid:id>", view_func=children_by_id)
     app.add_url_rule(f"/children", view_func=children)
 
-    parent_children = BaseRestAPIRelationshipById.as_view(f'parent-children', model=SingleParent,
-                                                          relationship_schema=ChildSchema, relationship_key='children')
+    parent_children = BaseRestAPIRelationshipByModelId.as_view(f'parent-children', model=SingleParent, sub_resource=Child,
+                                                               sub_resource_schema=ChildSchema, sub_resource_key='children')
     app.add_url_rule(f'/parents/<uuid:id>/children', view_func=parent_children)
 
     with app.app_context():

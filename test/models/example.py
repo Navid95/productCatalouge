@@ -69,6 +69,7 @@ class SingleParentSchema(BaseSchema):
 
     class Meta:
         model = SingleParent
+        include_fk = True
 
     links = ma.Hyperlinks({
         'children': {
@@ -85,7 +86,7 @@ class ChildSchema(BaseSchema):
 
     class Meta:
         model = Child
-        include_relationships = True
+        include_fk = True
 
 
 class SchoolClassSchema(BaseSchema):
@@ -93,4 +94,4 @@ class SchoolClassSchema(BaseSchema):
 
     class Meta:
         model = SchoolClass
-        include_relationships = True
+        include_fk = True
