@@ -209,6 +209,19 @@ class BaseRestAPIRelationshipByModelId(MethodView):
 
 
 class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
+    """
+    Generic class of all REST APIs.
+
+    For a given model of type BaseModel produces bellow http resource end points for its sub-resources:
+    GET, DELETE -> /models/id/sub-resources/id
+
+    Is a child class of flask's MethodView.
+
+    Class Variables:
+
+    - init_every_request: If false instructs flask to use 1 instance for all incoming requests which is useful if the
+    state of the object should be shared across requests, By-default it is False.
+    """
     init_every_request = False
 
     def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
@@ -243,4 +256,33 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
         return {}, 404
 
     def delete(self, model_id: UUID, sub_resource_id: UUID):
-        pass
+        """
+        HTTP DELETE, delete a sub-resource under a resource.
+
+        note: getattr(model, self.__sub_resource_key__) is used!
+
+        :param model_id: The id of the resource (model) on DB.
+        :param sub_resource_id: The id of the sub-resource on DB.
+        :return: bool
+        """
+        model = self.__model__.get(model_id)
+        sub_resource = self.__sub_resource__.get(sub_resource_id)
+        sub_resource_ref = getattr(model, self.__sub_resource_key__)
+
+        if self.__many__:
+            if sub_resource in sub_resource_ref:
+                sub_resource_ref.remove(sub_resource)
+            else:
+                return {'response': False}, 404
+        else:
+            if sub_resource == sub_resource_ref:
+                sub_resource_ref = None
+            else:
+                return {'response': False}, 404
+
+        put_result = self.__model__.put(model)
+
+        if put_result:
+            return {'response': True}
+        else:
+            return {'response': False}, 400
