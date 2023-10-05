@@ -212,20 +212,35 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
     init_every_request = False
 
     def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
-                 sub_resource_key: str):
+                 sub_resource_key: str, many: bool = True):
         self.__model__ = model
         self.__sub_resource__ = sub_resource
         self.__sub_resource_schema__ = sub_resource_schema
         self.__sub_resource_key__ = sub_resource_key
+        self.__many__ = many
 
     def get(self, model_id: UUID, sub_resource_id: UUID):
+        """
+        HTTP GET, retrieve a sub-resource under a resource.
+
+        note: getattr(model, self.__sub_resource_key__) is used!
+
+        :param model_id: The id of the resource (model) on DB.
+        :param sub_resource_id: The id of the sub-resource on DB.
+        :return: Serialized presentation of the sub-resource
+        """
         model = self.__model__.get(model_id)
         sub_resource = self.__sub_resource__.get(sub_resource_id)
-        if sub_resource in getattr(model, self.__sub_resource_key__):
-            dump_schema = self.__sub_resource_schema__()
-            return dump_schema.dump(sub_resource)
+        if self.__many__:
+            if sub_resource in getattr(model, self.__sub_resource_key__):
+                dump_schema = self.__sub_resource_schema__()
+                return dump_schema.dump(sub_resource)
         else:
-            return {}, 404
+            if sub_resource == getattr(model, self.__sub_resource_key__):
+                dump_schema = self.__sub_resource_schema__()
+                return dump_schema.dump(sub_resource)
+
+        return {}, 404
 
     def delete(self, model_id: UUID, sub_resource_id: UUID):
         pass
