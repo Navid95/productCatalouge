@@ -71,14 +71,14 @@ class SingleParentSchema(BaseSchema):
         model = SingleParent
         include_fk = True
 
-    links = ma.Hyperlinks({
-        'children': {
-            'url': ma.URLFor('parent-children', values=dict(id='<id>')),
-            'method': 'GET'
-        }
-    },
-        dump_only=True
-    )
+    # links = ma.Hyperlinks({
+    #     'children': {
+    #         'url': ma.URLFor('parent-children', values=dict(id='<id>')),
+    #         'method': 'GET'
+    #     }
+    # },
+    #     dump_only=True
+    # )
 
 
 class ChildSchema(BaseSchema):
@@ -87,22 +87,6 @@ class ChildSchema(BaseSchema):
     class Meta:
         model = Child
         include_fk = True
-
-    links = ma.Hyperlinks(
-        [
-            {
-                'href': ma.URLFor('child-single', values=dict(id='<id>')),
-                'rel': 'self',
-                'type': 'GET'
-            },
-            {
-                'href': ma.URLFor('parent-single', values=dict(id='<parent_id>')),
-                'rel': 'parent',
-                'type': 'GET'
-            }
-        ],
-        dump_only=True
-    )
 
 
 class SchoolClassSchema(BaseSchema):

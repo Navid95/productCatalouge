@@ -28,8 +28,6 @@ def test_get_api(client):
         response = client.get(f'/parents/{str(parent1.id)}')
 
         assert response.status_code == 200
-        assert response.json['parent'].get('links', None)
-        assert f'/parents/{str(parent1.id)}/children' == response.json['parent']['links']['children']['url']
 
 
 def test_post_api(client):
@@ -52,12 +50,10 @@ def test_put_api(client):
         assert response.json['parent']
 
         json_data = {'parent': response.json['parent']}
-        del json_data['parent']['links']
         parent1 = SingleParentSchema().load(json_data)
         parent_schema2 = SingleParentSchema(exclude=('created', 'updated'))
         json_data = parent_schema2.dump(parent1)
         json_data['parent']['name'] = 'updated name for parent 1'
-        del json_data['parent']['links']
         response2 = client.put(f'/parents', json=json_data)
 
         assert response2.status_code == 200
@@ -94,9 +90,6 @@ def test_delete(client):
         parent1_response = client.post(f'/parents', json=parent_schema.dump(parent1)).json
         parent2_response = client.post(f'/parents', json=parent_schema.dump(parent2)).json
         parent3_response = client.post(f'/parents', json=parent_schema.dump(parent3)).json
-        del parent1_response['parent']['links']
-        del parent2_response['parent']['links']
-        del parent3_response['parent']['links']
 
         parent1 = load_schema.load(parent1_response)
         parent2 = load_schema.load(parent2_response)
@@ -116,11 +109,10 @@ def test_get_relationship(client):
         parent1.children.append(Child(name='child1'))
         parent1.children.append(Child(name='child2'))
         SingleParent.post(parent1)
-        response = client.get(f'/parents/{str(parent1.id)}')
-        url = response.json['parent']['links']['children']['url']
-        response = client.get(url)
+        response = client.get(f'/parents/{str(parent1.id)}/children')
+
         assert response.status_code == 200
-        assert 'children' in response.json.keys()
+        assert len(response.json['children']) == 2
 
 
 def test_put_relationship(client):

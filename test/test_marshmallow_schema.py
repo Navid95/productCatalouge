@@ -36,7 +36,6 @@ def test_dump_single_field_keys(client):
         assert 'updated' in parent_dict.get('parent', {}).keys()
         assert 'active' in parent_dict.get('parent', {}).keys()
         assert 'name' in parent_dict.get('parent', {}).keys()
-        assert 'links' in parent_dict.get('parent', {}).keys()
 
         child_schema = ChildSchema()
         school_class1 = SchoolClass(name='class1')
