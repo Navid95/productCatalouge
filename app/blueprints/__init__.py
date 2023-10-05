@@ -219,7 +219,13 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
         self.__sub_resource_key__ = sub_resource_key
 
     def get(self, model_id: UUID, sub_resource_id: UUID):
-        pass
+        model = self.__model__.get(model_id)
+        sub_resource = self.__sub_resource__.get(sub_resource_id)
+        if sub_resource in getattr(model, self.__sub_resource_key__):
+            dump_schema = self.__sub_resource_schema__()
+            return dump_schema.dump(sub_resource)
+        else:
+            return {}, 404
 
     def delete(self, model_id: UUID, sub_resource_id: UUID):
         pass

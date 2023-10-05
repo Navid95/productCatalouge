@@ -88,6 +88,22 @@ class ChildSchema(BaseSchema):
         model = Child
         include_fk = True
 
+    links = ma.Hyperlinks(
+        [
+            {
+                'href': ma.URLFor('child-single', values=dict(id='<id>')),
+                'rel': 'self',
+                'type': 'GET'
+            },
+            {
+                'href': ma.URLFor('parent-single', values=dict(id='<parent_id>')),
+                'rel': 'parent',
+                'type': 'GET'
+            }
+        ],
+        dump_only=True
+    )
+
 
 class SchoolClassSchema(BaseSchema):
     __envelope__ = {'single': 'schoolClass', 'many': 'schoolClasses'}

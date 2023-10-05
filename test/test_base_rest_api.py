@@ -150,3 +150,23 @@ def test_put_relationship(client):
         for child in response.json['children']:
             assert child.get('parent_id', None) == str(parent1.id)
             assert child.get('id', None) != str(child1.id)
+
+
+def test_get_relationship_by_id(client):
+    with client:
+        parent1 = SingleParent(name='parent1')
+        child1 = Child(name='child1')
+        child2 = Child(name='child2')
+        child3 = Child(name='child3')
+        children = [child1, child2]
+        parent1.children = children
+        SingleParent.post(parent1)
+
+        response = client.get(f'/parents/{str(parent1.id)}/children/{str(child1.id)}')
+
+        assert response.status_code == 200
+        assert response.json['child']['id'] == str(child1.id)
+
+        response = client.get(f'/parents/{str(parent1.id)}/children/{str(child3.id)}')
+
+        assert response.status_code == 404
