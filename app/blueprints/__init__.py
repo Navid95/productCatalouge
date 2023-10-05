@@ -165,12 +165,12 @@ class BaseRestAPIRelationshipByModelId(MethodView):
 
     def get(self, id: UUID):
         """
-        HTTP GET, retrieve all sub-resources.
+        HTTP GET, retrieve sub-resource(s).
 
         note: getattr(model, self.__sub_resource_key__) is used!
 
         :param id: The id of the resource (model) on DB.
-        :return: Serialized presentation of the sub-resources
+        :return: Serialized presentation of the sub-resource(s)
         """
         schema = self.__sub_resource_schema__()
         model = self.__model__.get(id)
@@ -178,14 +178,19 @@ class BaseRestAPIRelationshipByModelId(MethodView):
 
     def put(self, id: UUID):
         """
+        HTTP PUT, update the subresource(s) by given data in request body.
 
-        :param id:
-        :return:
+        Based on the value of self.__many__ decides if it should operate on a single object or a collection of objects.
+        note: setattr(model, self.__sub_resource_key__, sub_resources) is used!
+
+        :param id: The id of the resource (model) on DB.
+        :return: Serialized presentation of the sub-resource(s)
         """
         model = self.__model__.get(id)
         dump_schema = self.__sub_resource_schema__()
         load_schema = self.__sub_resource_schema__(only=['id'], many=self.__many__)
         sub_resource_list = load_schema.load(request.json, many=self.__many__)
+
         if self.__many__:
             sub_resources = list()
             for sub_resource_instance in sub_resource_list:
