@@ -8,7 +8,12 @@ from app.models import BaseModel
 from app.models import BaseSchema
 
 
-class BaseRestAPIById(MethodView):
+class BaseAPI(MethodView):
+    init_every_request = False
+    __view_name_suffix__ = ''
+
+
+class BaseRestAPIById(BaseAPI):
     """
     Generic class of all REST APIs.
 
@@ -24,6 +29,7 @@ class BaseRestAPIById(MethodView):
 
     """
     init_every_request = False
+    __view_name_suffix__ = 'ById'
 
     def __init__(self, model: BaseModel, schema: BaseSchema):
         """
@@ -47,7 +53,7 @@ class BaseRestAPIById(MethodView):
         if model_object:
             return schema.dump(model_object)
         else:
-            return {}
+            return {}, 404
 
     def delete(self, id: UUID):
         """
@@ -58,7 +64,7 @@ class BaseRestAPIById(MethodView):
         return {'response': self.__model__.delete(id)}
 
 
-class BaseRestAPI(MethodView):
+class BaseRestAPI(BaseAPI):
     """
     Generic class of all REST APIs.
 
@@ -74,6 +80,7 @@ class BaseRestAPI(MethodView):
 
         """
     init_every_request = False
+    __view_name_suffix__ = ''
 
     def __init__(self, model: BaseModel, schema: BaseSchema):
         """
@@ -130,7 +137,7 @@ class BaseRestAPI(MethodView):
         return dump_schema.dump(self.__model__.get_all(limit=limit, page=page), many=True)
 
 
-class BaseRestAPIRelationshipByModelId(MethodView):
+class BaseRestAPIRelationshipByModelId(BaseAPI):
     """
     Generic class of all REST APIs.
 
@@ -145,6 +152,7 @@ class BaseRestAPIRelationshipByModelId(MethodView):
     state of the object should be shared across requests, By-default it is False.
     """
     init_every_request = False
+    __view_name_suffix__ = 'ByModelId'
 
     def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
                  sub_resource_key: str, many: bool = True):
@@ -208,7 +216,7 @@ class BaseRestAPIRelationshipByModelId(MethodView):
         return dump_schema.dump(getattr(model, self.__sub_resource_key__), many=self.__many__)
 
 
-class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
+class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
     """
     Generic class of all REST APIs.
 
@@ -223,6 +231,7 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(MethodView):
     state of the object should be shared across requests, By-default it is False.
     """
     init_every_request = False
+    __view_name_suffix__ = 'ByModeIdBySubResourceId'
 
     def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
                  sub_resource_key: str, many: bool = True):

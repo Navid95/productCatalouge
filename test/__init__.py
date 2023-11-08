@@ -1,7 +1,7 @@
 import pytest
 
-from app import create_app
 from app import Test
+from app import create_app
 from app.blueprints import BaseRestAPIById
 from app.blueprints import BaseRestAPI
 from app.blueprints import BaseRestAPIRelationshipByModelId
@@ -18,12 +18,15 @@ from test.models.example import ChildSchema
 def app():
     app = create_app(__name__, Test)
 
+    """
+    Sample for generating Schemas
+    """
     ChildAPISchema = ChildSchema.from_dict(
         {
             'links': ma.Hyperlinks(
                 [
                     {
-                        'href': ma.URLFor('child-single', values=dict(id='<id>')),
+                        'href': ma.URLFor(f'child-single', values=dict(id='<id>')),
                         'rel': 'self',
                         'type': 'GET'
                     },
@@ -76,3 +79,5 @@ def client(app):
 @pytest.fixture()
 def runner(app):
     return app.test_cli_runner()
+
+
