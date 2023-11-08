@@ -1,8 +1,9 @@
+import logging
 import os
 
 from flask import Flask
-from flask.views import MethodView
 
+from app.utilities.logging.configuration import app_logger
 from app import blueprints
 from app.config import Development, Test, Production
 from app.models import BaseSchema
@@ -14,12 +15,16 @@ from app.blueprints import BaseRestAPIRelationshipByModelId
 from app.blueprints import BaseRestAPIRelationshipByModelIdBySubResourceId
 from app.extensions import db
 from app.extensions import ma
+from environ import APP_LOGGER_NAME
 
 ENV = os.environ.get('FLASK_ENV', 'DEVELOP')
 configurations = [Development, Test, Production]
+logger = logging.getLogger(APP_LOGGER_NAME)
 
 
 def create_app(name, config=Development):
+    logger.info('initializing the flask app ...')
+    logger.error('sample error')
     app = Flask(import_name=name)
     app.config.from_object(config)
     app.config.from_pyfile('environ.py')
