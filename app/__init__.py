@@ -3,7 +3,8 @@ import os
 
 from flask import Flask
 
-from app.utilities.logging.configuration import app_logger
+from app.utilities.logging import configuration
+from app.utilities.logging.api_log import log_api_call, get_request_time
 from app import blueprints
 from app.config import Development, Test, Production
 from app.models import BaseSchema
@@ -24,13 +25,13 @@ logger = logging.getLogger(APP_LOGGER_NAME)
 
 def create_app(name, config=Development):
     logger.info('initializing the flask app ...')
-    logger.error('sample error')
     app = Flask(import_name=name)
     app.config.from_object(config)
     app.config.from_pyfile('environ.py')
     app = register_extensions(app)
     app = register_blueprints(app)
     app = register_apis(app)
+    app = register_app_hooks(app)
     return app
 
 
@@ -84,8 +85,10 @@ def register_api(app: Flask, resource: BaseModel, resource_schema: BaseSchema,
             many=relation[3]
         )
 
-        app.add_url_rule(f'{generate_view_uri(api_relationship, resource_schema, relation)}', view_func=api_relationship)
-        app.add_url_rule(f'{generate_view_uri(api_relationship_by_id, resource_schema, relation)}', view_func=api_relationship_by_id)
+        app.add_url_rule(f'{generate_view_uri(api_relationship, resource_schema, relation)}',
+                         view_func=api_relationship)
+        app.add_url_rule(f'{generate_view_uri(api_relationship_by_id, resource_schema, relation)}',
+                         view_func=api_relationship_by_id)
 
     return app
 
@@ -118,3 +121,9 @@ def generate_view_uri(end_point: BaseAPI, resource_schema: BaseSchema,
                 "many") + '/' + '<uuid:sub_resource_id>'
 
     return None
+
+
+def register_app_hooks(app):
+    hook1 = app.before_request(get_request_time)
+    hook2 = app.after_request(log_api_call)
+    return app
