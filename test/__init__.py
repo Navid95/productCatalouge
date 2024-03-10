@@ -2,10 +2,10 @@ import pytest
 
 from app import Test
 from app import create_app
-from app.blueprints import BaseRestAPIById
-from app.blueprints import BaseRestAPI
-from app.blueprints import BaseRestAPIRelationshipByModelId
-from app.blueprints import BaseRestAPIRelationshipByModelIdBySubResourceId
+from app.blueprints.api import BaseRestAPIById
+from app.blueprints.api import BaseRestAPI
+from app.blueprints.api import BaseRestAPIRelationshipByModelId
+from app.blueprints.api import BaseRestAPIRelationshipByModelIdBySubResourceId
 from app.extensions import db
 from app.extensions import ma
 from test.models.example import SingleParent

@@ -9,11 +9,11 @@ from app import blueprints
 from app.config import Development, Test, Production
 from app.models import BaseSchema
 from app.models import BaseModel
-from app.blueprints import BaseAPI
-from app.blueprints import BaseRestAPI
-from app.blueprints import BaseRestAPIById
-from app.blueprints import BaseRestAPIRelationshipByModelId
-from app.blueprints import BaseRestAPIRelationshipByModelIdBySubResourceId
+from app.blueprints.api import BaseAPI
+from app.blueprints.api import BaseRestAPI
+from app.blueprints.api import BaseRestAPIById
+from app.blueprints.api import BaseRestAPIRelationshipByModelId
+from app.blueprints.api import BaseRestAPIRelationshipByModelIdBySubResourceId
 from app.extensions import db
 from app.extensions import ma
 from environ import APP_LOGGER_NAME
