@@ -15,3 +15,6 @@ class BaseService:
 
     def delete_model_by_id(self, model_id: UUID):
         return self.__model__.delete(model_id)
+
+    def create_model(self, model_object: BaseModel):
+        return self.__model__.post(model_object)
