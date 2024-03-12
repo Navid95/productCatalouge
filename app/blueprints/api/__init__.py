@@ -138,7 +138,7 @@ class BaseRestAPI(BaseAPI):
             page = 1
             limit = 10
         dump_schema = self.__schema__()
-        return dump_schema.dump(self.__model__.get_all(limit=limit, page=page), many=True)
+        return dump_schema.dump(self.__service__.get_all_models(limit=limit, page=page), many=True)
 
 
 class BaseRestAPIRelationshipByModelId(BaseAPI):
