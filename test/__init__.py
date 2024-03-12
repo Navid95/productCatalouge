@@ -56,7 +56,8 @@ def app():
     parent_children = BaseRestAPIRelationshipByModelId.as_view(f'parent-children', model=SingleParent,
                                                                sub_resource=Child,
                                                                sub_resource_schema=ChildAPISchema,
-                                                               sub_resource_key='children')
+                                                               sub_resource_key='children',
+                                                               service=BaseService)
     app.add_url_rule(f'/parents/<uuid:id>/children', view_func=parent_children)
 
     parent_children_id = BaseRestAPIRelationshipByModelIdBySubResourceId.as_view(f'parent-children-id',
