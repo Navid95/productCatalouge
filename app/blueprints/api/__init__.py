@@ -159,7 +159,7 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
     __view_name_suffix__ = 'ByModelId'
 
     def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
-                 sub_resource_key: str, many: bool = True):
+                 sub_resource_key: str, service: BaseService.__class__, many: bool = True):
         """
         Initiate the object.
 
@@ -173,6 +173,7 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         self.__sub_resource__ = sub_resource
         self.__sub_resource_schema__ = sub_resource_schema
         self.__sub_resource_key__ = sub_resource_key
+        self.__service__ = service(model)
         self.__many__ = many
 
     def get(self, id: UUID):
@@ -185,8 +186,7 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         :return: Serialized presentation of the sub-resource(s)
         """
         schema = self.__sub_resource_schema__()
-        model = self.__model__.get(id)
-        return schema.dump(getattr(model, self.__sub_resource_key__), many=self.__many__)
+        return schema.dump(self.__service__.get_sub_model(id, self.__sub_resource_key__), many=self.__many__)
 
     def put(self, id: UUID):
         """
