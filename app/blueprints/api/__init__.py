@@ -6,6 +6,7 @@ from marshmallow import ValidationError
 
 from app.models import BaseModel
 from app.models import BaseSchema
+from app.blueprints import BaseService
 
 
 class BaseAPI(MethodView):
@@ -31,15 +32,17 @@ class BaseRestAPIById(BaseAPI):
     init_every_request = False
     __view_name_suffix__ = 'ById'
 
-    def __init__(self, model: BaseModel, schema: BaseSchema):
+    def __init__(self, model: BaseModel, schema: BaseSchema, service: BaseService.__class__):
         """
         Initiate the object.
 
         :param model: Model to use in methods.
         :param schema: Schema to use in serialization/deserialization.
+        :param service: service layer for business logic.
         """
         self.__model__ = model
         self.__schema__ = schema
+        self.__service__ = service(self.__model__)
 
     def get(self, id: UUID):
         """
@@ -49,7 +52,7 @@ class BaseRestAPIById(BaseAPI):
         :return: Serialized presentation of the resource
         """
         schema = self.__schema__()
-        model_object = self.__model__.get(id)
+        model_object = self.__service__.get_model_by_id(id)
         if model_object:
             return schema.dump(model_object)
         else:
