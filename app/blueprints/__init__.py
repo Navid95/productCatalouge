@@ -21,3 +21,6 @@ class BaseService:
 
     def update_model(self, model_object: BaseModel):
         return self.__model__.put(model_object)
+
+    def get_all_models(self, limit=10, page=1):
+        return self.__model__.get_all(limit=limit, page=page)
