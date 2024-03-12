@@ -13,3 +13,5 @@ class BaseService:
             return None
         return model_object
 
+    def delete_model_by_id(self, model_id: UUID):
+        return self.__model__.delete(model_id)
