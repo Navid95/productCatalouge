@@ -64,7 +64,7 @@ class BaseRestAPIById(BaseAPI):
         :param id: The id of the resource on DB.
         :return: bool
         """
-        return {'response': self.__model__.delete(id)}
+        return {'response': self.__service__.delete_model_by_id(id)}
 
 
 class BaseRestAPI(BaseAPI):
