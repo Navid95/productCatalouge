@@ -85,7 +85,7 @@ class BaseRestAPI(BaseAPI):
     init_every_request = False
     __view_name_suffix__ = ''
 
-    def __init__(self, model: BaseModel, schema: BaseSchema):
+    def __init__(self, model: BaseModel, schema: BaseSchema, service: BaseService.__class__):
         """
         Initiate the object.
 
@@ -94,6 +94,7 @@ class BaseRestAPI(BaseAPI):
         """
         self.__model__ = model
         self.__schema__ = schema
+        self.__service__ = service(model)
 
     def post(self):
         """
@@ -106,7 +107,7 @@ class BaseRestAPI(BaseAPI):
             model_object = load_schema.load(request.json)
         except ValidationError as err:
             return err.messages
-        return dump_schema.dump(self.__model__.post(model_object))
+        return dump_schema.dump(self.__service__.create_model(model_object))
 
     def put(self):
         """
