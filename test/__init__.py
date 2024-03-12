@@ -44,12 +44,12 @@ def app():
 
     api_by_id = BaseRestAPIById.as_view(f"parent-single", model=SingleParent, schema=SingleParentSchema,
                                         service=BaseService)
-    api = BaseRestAPI.as_view(f"parent-group", model=SingleParent, schema=SingleParentSchema)
+    api = BaseRestAPI.as_view(f"parent-group", model=SingleParent, schema=SingleParentSchema, service=BaseService)
     app.add_url_rule(f"/parents/<uuid:id>", view_func=api_by_id)
     app.add_url_rule(f"/parents", view_func=api)
 
     children_by_id = BaseRestAPIById.as_view(f'child-single', model=Child, schema=ChildAPISchema, service=BaseService)
-    children = BaseRestAPI.as_view(f'child-base', model=Child, schema=ChildAPISchema)
+    children = BaseRestAPI.as_view(f'child-base', model=Child, schema=ChildAPISchema, service=BaseService)
     app.add_url_rule(f"/children/<uuid:id>", view_func=children_by_id)
     app.add_url_rule(f"/children", view_func=children)
 
