@@ -18,3 +18,6 @@ class BaseService:
 
     def create_model(self, model_object: BaseModel):
         return self.__model__.post(model_object)
+
+    def update_model(self, model_object: BaseModel):
+        return self.__model__.put(model_object)
