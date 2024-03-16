@@ -64,7 +64,8 @@ def app():
                                                                                  model=SingleParent,
                                                                                  sub_resource=Child,
                                                                                  sub_resource_schema=ChildAPISchema,
-                                                                                 sub_resource_key='children')
+                                                                                 sub_resource_key='children',
+                                                                                 service=BaseService)
 
     app.add_url_rule(f'/parents/<uuid:model_id>/children/<uuid:sub_resource_id>', view_func=parent_children_id)
 
