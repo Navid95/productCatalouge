@@ -198,26 +198,13 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         :param id: The id of the resource (model) on DB.
         :return: Serialized presentation of the sub-resource(s)
         """
-        model = self.__model__.get(id)
         dump_schema = self.__sub_resource_schema__()
         load_schema = self.__sub_resource_schema__(only=['id'], many=self.__many__)
         sub_resource_list = load_schema.load(request.json, many=self.__many__)
 
-        if self.__many__:
-            sub_resources = list()
-            for sub_resource_instance in sub_resource_list:
-                sub_resource = self.__sub_resource__.get(sub_resource_instance.id)
-                if sub_resource:
-                    sub_resources.append(sub_resource)
-            setattr(model, self.__sub_resource_key__, sub_resources)
-        else:
-            sub_resource = self.__sub_resource__.get(sub_resource_list)
-            if sub_resource:
-                setattr(model, self.__sub_resource_key__, sub_resource)
-
-        put_result = self.__model__.put(model)
-
-        return dump_schema.dump(getattr(model, self.__sub_resource_key__), many=self.__many__)
+        return dump_schema.dump(
+            self.__service__.create_sub_model(id, sub_resource_list, self.__sub_resource_key__, self.__many__),
+            many=self.__many__)
 
 
 class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
