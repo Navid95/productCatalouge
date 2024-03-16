@@ -6,7 +6,7 @@ from marshmallow import ValidationError
 
 from app.models import BaseModel
 from app.models import BaseSchema
-from app.blueprints import BaseService
+from app.blueprints.service import BaseService
 
 
 class BaseAPI(MethodView):

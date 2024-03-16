@@ -12,7 +12,7 @@ from test.models.example import SingleParent
 from test.models.example import SingleParentSchema
 from test.models.example import Child
 from test.models.example import ChildSchema
-from app.blueprints import BaseService
+from app.blueprints.service import BaseService
 
 
 @pytest.fixture()
