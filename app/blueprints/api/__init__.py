@@ -225,11 +225,12 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
     __view_name_suffix__ = 'ByModeIdBySubResourceId'
 
     def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
-                 sub_resource_key: str, many: bool = True):
+                 sub_resource_key: str, service: BaseService.__class__, many: bool = True):
         self.__model__ = model
         self.__sub_resource__ = sub_resource
         self.__sub_resource_schema__ = sub_resource_schema
         self.__sub_resource_key__ = sub_resource_key
+        self.__service__ = service(model)
         self.__many__ = many
 
     def get(self, model_id: UUID, sub_resource_id: UUID):
@@ -242,18 +243,9 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
         :param sub_resource_id: The id of the sub-resource on DB.
         :return: Serialized presentation of the sub-resource
         """
-        model = self.__model__.get(model_id)
-        sub_resource = self.__sub_resource__.get(sub_resource_id)
-        if self.__many__:
-            if sub_resource in getattr(model, self.__sub_resource_key__):
-                dump_schema = self.__sub_resource_schema__()
-                return dump_schema.dump(sub_resource)
-        else:
-            if sub_resource == getattr(model, self.__sub_resource_key__):
-                dump_schema = self.__sub_resource_schema__()
-                return dump_schema.dump(sub_resource)
-
-        return {}, 404
+        dump_schema = self.__sub_resource_schema__()
+        return dump_schema.dump(
+            self.__service__.get_sub_model_by_id(model_id, sub_resource_id, self.__sub_resource_key__, self.__many__))
 
     def delete(self, model_id: UUID, sub_resource_id: UUID):
         """
@@ -265,24 +257,5 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
         :param sub_resource_id: The id of the sub-resource on DB.
         :return: bool
         """
-        model = self.__model__.get(model_id)
-        sub_resource = self.__sub_resource__.get(sub_resource_id)
-        sub_resource_ref = getattr(model, self.__sub_resource_key__)
-
-        if self.__many__:
-            if sub_resource in sub_resource_ref:
-                sub_resource_ref.remove(sub_resource)
-            else:
-                return {'response': False}, 404
-        else:
-            if sub_resource == sub_resource_ref:
-                sub_resource_ref = None
-            else:
-                return {'response': False}, 404
-
-        put_result = self.__model__.put(model)
-
-        if put_result:
-            return {'response': True}
-        else:
-            return {'response': False}, 400
+        return self.__service__.delete_sub_model_by_id(model_id, sub_resource_id, self.__sub_resource_key__,
+                                                       self.__many__)

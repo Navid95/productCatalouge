@@ -47,3 +47,43 @@ class BaseService:
 
         put_result = self.__model__.put(model)
         return getattr(model, sub_resource_key)
+
+    def get_sub_model_by_id(self, model_id: UUID, sub_model_id: UUID, sub_model_key: str, many: bool = False):
+        model = self.__model__.get(model_id)
+        sub_resource_list = getattr(model, sub_model_key)
+        if sub_resource_list:
+            if many:
+                for sub_model in sub_resource_list:
+                    if sub_model_id == sub_model.id:
+                        return sub_model
+            else:
+                if sub_resource_list.id == sub_model_id:
+                    return sub_resource_list
+        return None
+
+    def delete_sub_model_by_id(self, model_id: UUID, sub_model_id: UUID, sub_model_key: str, many: bool = False):
+        model = self.__model__.get(model_id)
+        sub_resource_list = getattr(model, sub_model_key)
+        if sub_resource_list:
+            delete_result = False
+            if many:
+                for sub_model in sub_resource_list:
+                    if sub_model.id == sub_model_id:
+                        sub_resource_list.remove(sub_model)
+                        delete_result = True
+                        break
+                if not delete_result:
+                    return {'response': False}, 404
+            else:
+                if sub_resource_list.id == sub_model_id:
+                    setattr(model, sub_model_key, None)
+                else:
+                    return {'response': False}, 404
+
+            put_result = self.__model__.put(model)
+
+            if put_result:
+                return {'response': True}
+            else:
+                return {'response': False}, 400
+        return {'response': False}, 400
