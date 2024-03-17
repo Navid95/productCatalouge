@@ -4,6 +4,12 @@ from app.models import BaseModel
 
 
 class BaseService:
+    """
+    Base service class that should contain applications business logics.
+
+    Methods are considered general, for customizing the behaviour more methods should be developed. Exp create sub model, can be customized based on sub_model_key and each relationship gets it's own method.
+    """
+
     def __init__(self, model: BaseModel):
         self.__model__ = model
 
@@ -30,23 +36,23 @@ class BaseService:
         sub_model_list = getattr(model_object, sub_model_key)
         return sub_model_list
 
-    def create_sub_model(self, model_id: UUID, sub_resource_list: list | BaseModel, sub_resource_key: str,
+    def create_sub_model(self, model_id: UUID, sub_model_list: list | BaseModel, sub_model_key: str,
                          many: bool = False):
         model = self.__model__.get(model_id)
         if many:
             sub_resources = list()
-            for sub_resource_instance in sub_resource_list:
+            for sub_resource_instance in sub_model_list:
                 sub_resource = sub_resource_instance.get(sub_resource_instance.id)
                 if sub_resource:
                     sub_resources.append(sub_resource)
-            setattr(model, sub_resource_key, sub_resources)
+            setattr(model, sub_model_key, sub_resources)
         else:
-            sub_resource = sub_resource_list.get(sub_resource_list.id)
+            sub_resource = sub_model_list.get(sub_model_list.id)
             if sub_resource:
-                setattr(model, sub_resource_key, sub_resource)
+                setattr(model, sub_model_key, sub_resource)
 
         put_result = self.__model__.put(model)
-        return getattr(model, sub_resource_key)
+        return getattr(model, sub_model_key)
 
     def get_sub_model_by_id(self, model_id: UUID, sub_model_id: UUID, sub_model_key: str, many: bool = False):
         model = self.__model__.get(model_id)
