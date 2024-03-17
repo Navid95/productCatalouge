@@ -1,1 +1,1 @@
-flask restfull
+Product Catalogue with Rest-full architecture using python + flask
