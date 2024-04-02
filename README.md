@@ -1,1 +1,1 @@
-flask restfull
+A simple product catalogue platform
