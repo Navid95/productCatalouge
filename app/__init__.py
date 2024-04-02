@@ -14,6 +14,7 @@ from app.blueprints.api import BaseRestAPI
 from app.blueprints.api import BaseRestAPIById
 from app.blueprints.api import BaseRestAPIRelationshipByModelId
 from app.blueprints.api import BaseRestAPIRelationshipByModelIdBySubResourceId
+from app.blueprints.service import BaseService
 from app.extensions import db
 from app.extensions import ma
 from environ import APP_LOGGER_NAME
@@ -46,21 +47,27 @@ def register_extensions(app):
 
 
 def register_apis(app):
+    from models.product.product import Product
+    from models.product.product import ProductSchema
+
+    register_api(app, Product, ProductSchema, BaseService)
     return app
 
 
-def register_api(app: Flask, resource: BaseModel, resource_schema: BaseSchema,
+def register_api(app: Flask, resource: BaseModel, resource_schema: BaseSchema, service: BaseService,
                  relations: list(tuple((BaseModel, BaseSchema, str, bool))) = None):
     rest_api = BaseRestAPI.as_view(
         name=f'{generate_view_name(BaseRestAPI, resource_schema)}',
         model=resource,
-        schema=resource_schema
+        schema=resource_schema,
+        service=service
     )
 
     rest_api_by_id = BaseRestAPIById.as_view(
         name=f'{generate_view_name(BaseRestAPIById, resource_schema)}',
         model=resource,
-        schema=resource_schema
+        schema=resource_schema,
+        service=service
     )
 
     app.add_url_rule(f'{generate_view_uri(BaseRestAPI, resource_schema)}', view_func=rest_api)
