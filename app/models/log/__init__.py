@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.extensions import db
 
 
@@ -16,4 +18,6 @@ class IncomingAPI(db.Model):
     r_headers: db.Mapped[str] = db.mapped_column(db.String)
     r_body: db.Mapped[str] = db.mapped_column(db.String)
 
+    request_time: db.Mapped[datetime] = db.mapped_column(db.DateTime)
+    response_time: db.Mapped[datetime] = db.mapped_column(db.DateTime)
     remote_address: db.Mapped[str] = db.mapped_column(db.String)
