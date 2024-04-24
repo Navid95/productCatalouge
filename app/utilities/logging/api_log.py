@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from copy import deepcopy
 
 from flask import g
 from flask import request
@@ -36,7 +37,7 @@ def log_api_call(response: Response):
         'remote_address': request.remote_addr
     }
 
-    file_message = message
+    file_message = deepcopy(message)
     file_message['request_time'] = request_time.isoformat()
     file_message['response_time'] = response_time.isoformat()
     api_logger.info(msg=message)

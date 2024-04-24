@@ -9,6 +9,7 @@ from app import blueprints
 from app.config import Development, Test, Production
 from app.models import BaseSchema
 from app.models import BaseModel
+from app.models.log import IncomingAPI
 from app.blueprints.api import BaseAPI
 from app.blueprints.api import BaseRestAPI
 from app.blueprints.api import BaseRestAPIById
