@@ -119,7 +119,7 @@ class BaseRestAPI(BaseAPI):
         try:
             model_object = load_schema.load(request.json)
         except ValidationError as err:
-            return err.messages
+            return err.messages, 400
         return dump_schema.dump(self.__service__.update_model(model_object))
 
     def get(self):
