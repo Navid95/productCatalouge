@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Type
 
 from flask import Flask
 
@@ -15,6 +16,7 @@ from app.blueprints.api import BaseRestAPI
 from app.blueprints.api import BaseRestAPIById
 from app.blueprints.api import BaseRestAPIRelationshipByModelId
 from app.blueprints.api import BaseRestAPIRelationshipByModelIdBySubResourceId
+from app.blueprints.service import BaseService
 from app.extensions import db
 from app.extensions import ma
 from environ import APP_LOGGER_NAME
@@ -50,52 +52,45 @@ def register_apis(app):
     return app
 
 
-def register_api(app: Flask, resource: BaseModel, resource_schema: BaseSchema,
-                 relations: list(tuple((BaseModel, BaseSchema, str, bool))) = None):
+def register_api(app: Flask, resource: Type[BaseModel], resource_schema: Type[BaseSchema], service: Type[BaseService],
+                 relations: list[tuple[[BaseModel, BaseSchema, str, [bool]]]] = None):
+    _service_ = service(model=resource, schema=resource_schema, relations=relations)
+    if relations:
+        for relation in relations:
+            api_relationship = BaseRestAPIRelationshipByModelId.as_view(
+                name=generate_view_name(BaseRestAPIRelationshipByModelId, resource_schema, relation),
+                sub_resource_key=relation[2],
+                service=_service_
+            )
+
+            api_relationship_by_id = BaseRestAPIRelationshipByModelIdBySubResourceId.as_view(
+                name=generate_view_name(BaseRestAPIRelationshipByModelIdBySubResourceId, resource_schema, relation),
+                sub_resource_key=relation[2],
+                service=_service_
+            )
+
+            app.add_url_rule(generate_view_uri(BaseRestAPIRelationshipByModelId, resource_schema, relation),
+                             view_func=api_relationship)
+            app.add_url_rule(generate_view_uri(BaseRestAPIRelationshipByModelIdBySubResourceId, resource_schema, relation),
+                             view_func=api_relationship_by_id)
     rest_api = BaseRestAPI.as_view(
         name=f'{generate_view_name(BaseRestAPI, resource_schema)}',
-        model=resource,
-        schema=resource_schema
+        service=_service_
     )
 
     rest_api_by_id = BaseRestAPIById.as_view(
         name=f'{generate_view_name(BaseRestAPIById, resource_schema)}',
-        model=resource,
-        schema=resource_schema
+        service=_service_
     )
 
-    app.add_url_rule(f'{generate_view_uri(BaseRestAPI, resource_schema)}', view_func=rest_api)
-    app.add_url_rule(f'{generate_view_uri(BaseRestAPIById, resource_schema)}', view_func=rest_api_by_id)
-
-    for relation in relations:
-        api_relationship = BaseRestAPIRelationshipByModelId.as_view(
-            name=f'{generate_view_name(api_relationship, resource_schema, relation)}',
-            model=resource,
-            sub_resource=relation[0],
-            sub_resource_schema=relation[1],
-            sub_resource_key=relation[2],
-            many=relation[3]
-        )
-
-        api_relationship_by_id = BaseRestAPIRelationshipByModelIdBySubResourceId.as_view(
-            name=f'{generate_view_name(api_relationship_by_id, resource_schema, relation)}',
-            model=resource,
-            sub_resource=relation[0],
-            sub_resource_schema=relation[1],
-            sub_resource_key=relation[2],
-            many=relation[3]
-        )
-
-        app.add_url_rule(f'{generate_view_uri(api_relationship, resource_schema, relation)}',
-                         view_func=api_relationship)
-        app.add_url_rule(f'{generate_view_uri(api_relationship_by_id, resource_schema, relation)}',
-                         view_func=api_relationship_by_id)
+    app.add_url_rule(generate_view_uri(BaseRestAPI, resource_schema), view_func=rest_api)
+    app.add_url_rule(generate_view_uri(BaseRestAPIById, resource_schema), view_func=rest_api_by_id)
 
     return app
 
 
-def generate_view_name(end_point: BaseAPI, resource_schema: BaseSchema,
-                       relation: tuple((BaseModel, BaseSchema, str, bool)) = None) -> str:
+def generate_view_name(end_point: Type[BaseAPI], resource_schema: Type[BaseSchema],
+                       relation: tuple[[BaseModel, BaseSchema, str, bool]] = None) -> str:
     view_name = resource_schema.__envelope__.get("many")
 
     if relation:
@@ -106,22 +101,21 @@ def generate_view_name(end_point: BaseAPI, resource_schema: BaseSchema,
     return view_name
 
 
-def generate_view_uri(end_point: BaseAPI, resource_schema: BaseSchema,
-                      relation: tuple((BaseModel, BaseSchema, str, bool)) = None) -> str:
+def generate_view_uri(end_point: Type[BaseAPI], resource_schema: Type[BaseSchema],
+                      relation: tuple[[BaseModel, BaseSchema, str, bool]] = None) -> str:
     view_uri = '/' + resource_schema.__envelope__.get("many")
 
-    if isinstance(end_point, BaseRestAPI):
+    if end_point is BaseRestAPI:
         return view_uri
-    elif isinstance(end_point, BaseRestAPIById):
+    elif end_point is BaseRestAPIById:
         return view_uri + '/' + '<uuid:id>'
     elif relation:
-        if isinstance(end_point, BaseRestAPIRelationshipByModelId):
-            return view_uri + '/' + '<uuid:id>' + relation[1].__envelope__.get("many")
-        elif isinstance(end_point, BaseRestAPIRelationshipByModelIdBySubResourceId):
-            return view_uri + '/' + '<uuid:model_id>' + relation[1].__envelope__.get(
+        if end_point is BaseRestAPIRelationshipByModelId:
+            return view_uri + '/' + '<uuid:id>' + '/' + relation[1].__envelope__.get("many")
+        elif end_point is BaseRestAPIRelationshipByModelIdBySubResourceId:
+            return view_uri + '/' + '<uuid:model_id>' + '/' + relation[1].__envelope__.get(
                 "many") + '/' + '<uuid:sub_resource_id>'
-
-    return None
+    return ''
 
 
 def register_app_hooks(app):
