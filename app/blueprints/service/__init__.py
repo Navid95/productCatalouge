@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import Type
 
 from flask import jsonify
-from marshmallow  import ValidationError
+from marshmallow import ValidationError
 from app.models import BaseModel
 from app.models import BaseSchema
 
@@ -11,16 +11,24 @@ class BaseService:
     """
     Base service class that should contain applications business logics.
 
-    Methods are considered general, for customizing the behaviour more methods should be developed. Exp create sub model, can be customized based on sub_model_key and each relationship gets it's own method.
+    The exact returned value of general methods will be the response of the API to the caller(should be in json format).
+    Methods are considered general, for customizing the behaviour more methods should be developed.
+    Example: create sub model, can be customized based on sub_model_key and each relationship gets it's own method.
     """
 
     def __init__(self, model: Type[BaseModel], schema: Type[BaseSchema],
                  relations: list[tuple[[BaseModel, Type[BaseSchema], str, [bool]]]] = None):
-        self.__model__ = model
-        self.__model_schema__ = schema
-        self.__relation_models__ = dict()
-        self.__relation_schemas__ = dict()
-        self.__relation_many__ = dict()
+        """
+        Initiates the service layer for a given model(resource).
+        :param model: data base model
+        :param schema: marshmallow schema of the model
+        :param relations: contains all relations of the model
+        """
+        self.__model__ = model                  # main model to operate on
+        self.__model_schema__ = schema          # main model marshmallow schema
+        self.__relation_models__ = dict()       # dictionary containing {sub_resource_key: sub_resource_class}
+        self.__relation_schemas__ = dict()      # dictionary containing {sub_resource_key: sub_resource_schema_class}
+        self.__relation_many__ = dict()         # dictionary containing {sub_resource_key: bool -> True:many & False:single}
         if relations:
             for relation in relations:
                 self.__relation_models__[relation[2]] = relation[0]
@@ -28,6 +36,13 @@ class BaseService:
                 self.__relation_many__[relation[2]] = relation[3]
 
     def get_model_by_id(self, model_id: UUID):
+        """
+        Get model by UUID.
+
+        returns 404 model is not found
+        :param model_id: model UUID
+        :return: serialized form of model
+        """
         model_object = self.__model__.get(model_id)
         if not model_object:
             return {}, 404
@@ -35,6 +50,11 @@ class BaseService:
         return dump_schema.dump(model_object)
 
     def delete_model_by_id(self, model_id: UUID):
+        """
+        Delete the model by the given UUID (all deletes are soft deletes)
+        :param model_id: model UUID
+        :return: {'result': bool}
+        """
         return {'result': self.__model__.delete(model_id)}
 
     def create_model(self, request_data: dict = None):
@@ -119,7 +139,7 @@ class BaseService:
             if many:
                 for sub_model in sub_resource_list:
                     if sub_model_id == sub_model.id:
-                        return dump_schema.dump(sub_model, many)
+                        return dump_schema.dump(sub_model)
             else:
                 if sub_resource_list.id == sub_model_id:
                     return dump_schema.dump(sub_resource_list)

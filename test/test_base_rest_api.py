@@ -98,7 +98,7 @@ def test_delete(client):
         response = client.delete(f'/parents/{parent1.id}')
 
         assert response.status_code == 200
-        assert response.json['response'] == True
+        assert response.json['result'] == True
 
         assert client.get(f'/parents/{str(parent1.id)}').json.get('parent', {}) == {}
 

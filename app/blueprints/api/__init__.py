@@ -36,8 +36,6 @@ class BaseRestAPIById(BaseAPI):
         """
         Initiate the object.
 
-        :param model: Model to use in methods.
-        :param schema: Schema to use in serialization/deserialization.
         :param service: service layer for business logic.
         """
         self.__service__ = service
@@ -54,6 +52,7 @@ class BaseRestAPIById(BaseAPI):
     def delete(self, id: UUID):
         """
         HTTP DELETE, delete resource by given id.
+
         :param id: The id of the resource on DB.
         :return: bool
         """
@@ -82,8 +81,7 @@ class BaseRestAPI(BaseAPI):
         """
         Initiate the object.
 
-        :param model: Model to use in methods.
-        :param schema: Schema to use in serialization/deserialization.
+        :param service: service layer for business logic.
         """
         self.__service__ = service
 
@@ -140,11 +138,8 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         """
         Initiate the object.
 
-        :param model: Model to use in methods.
-        :param sub_resource: Sub-resource model to use in methods.
-        :param sub_resource_schema: Schema to use in serialization/deserialization (sub-resources).
         :param sub_resource_key: The attribute name of the sub-resource on model (i.e model.key).
-        :param many: Indicating if the relationship is with a single object or a collection of objects.
+        :param service: service layer for business logic.
         """
         self.__sub_resource_key__ = sub_resource_key
         self.__service__ = service
@@ -152,8 +147,6 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
     def get(self, id: UUID):
         """
         HTTP GET, retrieve sub-resource(s).
-
-        note: getattr(model, self.__sub_resource_key__) is used!
 
         :param id: The id of the resource (model) on DB.
         :return: Serialized presentation of the sub-resource(s)
@@ -163,9 +156,6 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
     def put(self, id: UUID):
         """
         HTTP PUT, update the subresource(s) by given data in request body.
-
-        Based on the value of self.__many__ decides if it should operate on a single object or a collection of objects.
-        note: setattr(model, self.__sub_resource_key__, sub_resources) is used!
 
         :param id: The id of the resource (model) on DB.
         :return: Serialized presentation of the sub-resource(s)
@@ -192,14 +182,18 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
     __view_name_suffix__ = 'ByModeIdBySubResourceId'
 
     def __init__(self, sub_resource_key: str, service: BaseService):
+        """
+        Initiate the object.
+
+        :param sub_resource_key: The attribute name of the sub-resource on model (i.e model.key).
+        :param service: service layer for business logic.
+        """
         self.__sub_resource_key__ = sub_resource_key
         self.__service__ = service
 
     def get(self, model_id: UUID, sub_resource_id: UUID):
         """
         HTTP GET, retrieve a sub-resource under a resource.
-
-        note: getattr(model, self.__sub_resource_key__) is used!
 
         :param model_id: The id of the resource (model) on DB.
         :param sub_resource_id: The id of the sub-resource on DB.
@@ -210,8 +204,6 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
     def delete(self, model_id: UUID, sub_resource_id: UUID):
         """
         HTTP DELETE, delete a sub-resource under a resource.
-
-        note: getattr(model, self.__sub_resource_key__) is used!
 
         :param model_id: The id of the resource (model) on DB.
         :param sub_resource_id: The id of the sub-resource on DB.
