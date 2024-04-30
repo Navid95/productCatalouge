@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Type
 
 from flask import Flask
 
@@ -97,56 +98,44 @@ def register_apis(app):
     return app
 
 
-def register_api(app: Flask, resource: BaseModel, resource_schema: BaseSchema, service: BaseService,
+def register_api(app: Flask, resource: Type[BaseModel], resource_schema: Type[BaseSchema], service: Type[BaseService],
                  relations: list[tuple[[BaseModel, BaseSchema, str, [bool]]]] = None):
-    rest_api = BaseRestAPI.as_view(
-        name=f'{generate_view_name(BaseRestAPI, resource_schema)}',
-        model=resource,
-        schema=resource_schema,
-        service=service
-    )
-
-    rest_api_by_id = BaseRestAPIById.as_view(
-        name=f'{generate_view_name(BaseRestAPIById, resource_schema)}',
-        model=resource,
-        schema=resource_schema,
-        service=service
-    )
-
-    app.add_url_rule(generate_view_uri(BaseRestAPI, resource_schema), view_func=rest_api)
-    app.add_url_rule(generate_view_uri(BaseRestAPIById, resource_schema), view_func=rest_api_by_id)
-
+    _service_ = service(model=resource, schema=resource_schema, relations=relations)
     if relations:
         for relation in relations:
             api_relationship = BaseRestAPIRelationshipByModelId.as_view(
                 name=generate_view_name(BaseRestAPIRelationshipByModelId, resource_schema, relation),
-                model=resource,
-                sub_resource=relation[0],
-                sub_resource_schema=relation[1],
                 sub_resource_key=relation[2],
-                many=relation[3],
-                service=service
+                service=_service_
             )
 
             api_relationship_by_id = BaseRestAPIRelationshipByModelIdBySubResourceId.as_view(
                 name=generate_view_name(BaseRestAPIRelationshipByModelIdBySubResourceId, resource_schema, relation),
-                model=resource,
-                sub_resource=relation[0],
-                sub_resource_schema=relation[1],
                 sub_resource_key=relation[2],
-                many=relation[3],
-                service=service
+                service=_service_
             )
 
             app.add_url_rule(generate_view_uri(BaseRestAPIRelationshipByModelId, resource_schema, relation),
                              view_func=api_relationship)
             app.add_url_rule(generate_view_uri(BaseRestAPIRelationshipByModelIdBySubResourceId, resource_schema, relation),
                              view_func=api_relationship_by_id)
+    rest_api = BaseRestAPI.as_view(
+        name=f'{generate_view_name(BaseRestAPI, resource_schema)}',
+        service=_service_
+    )
+
+    rest_api_by_id = BaseRestAPIById.as_view(
+        name=f'{generate_view_name(BaseRestAPIById, resource_schema)}',
+        service=_service_
+    )
+
+    app.add_url_rule(generate_view_uri(BaseRestAPI, resource_schema), view_func=rest_api)
+    app.add_url_rule(generate_view_uri(BaseRestAPIById, resource_schema), view_func=rest_api_by_id)
 
     return app
 
 
-def generate_view_name(end_point: BaseAPI, resource_schema: BaseSchema,
+def generate_view_name(end_point: Type[BaseAPI], resource_schema: Type[BaseSchema],
                        relation: tuple[[BaseModel, BaseSchema, str, bool]] = None) -> str:
     view_name = resource_schema.__envelope__.get("many")
 
@@ -158,7 +147,7 @@ def generate_view_name(end_point: BaseAPI, resource_schema: BaseSchema,
     return view_name
 
 
-def generate_view_uri(end_point: BaseAPI, resource_schema: BaseSchema,
+def generate_view_uri(end_point: Type[BaseAPI], resource_schema: Type[BaseSchema],
                       relation: tuple[[BaseModel, BaseSchema, str, bool]] = None) -> str:
     view_uri = '/' + resource_schema.__envelope__.get("many")
 

@@ -32,7 +32,7 @@ class BaseRestAPIById(BaseAPI):
     init_every_request = False
     __view_name_suffix__ = 'ById'
 
-    def __init__(self, model: BaseModel, schema: BaseSchema, service: BaseService.__class__):
+    def __init__(self, service: BaseService):
         """
         Initiate the object.
 
@@ -40,9 +40,7 @@ class BaseRestAPIById(BaseAPI):
         :param schema: Schema to use in serialization/deserialization.
         :param service: service layer for business logic.
         """
-        self.__model__ = model
-        self.__schema__ = schema
-        self.__service__ = service(self.__model__)
+        self.__service__ = service
 
     def get(self, id: UUID):
         """
@@ -51,12 +49,7 @@ class BaseRestAPIById(BaseAPI):
         :param id: The id of the resource on DB.
         :return: Serialized presentation of the resource
         """
-        schema = self.__schema__()
-        model_object = self.__service__.get_model_by_id(id)
-        if model_object:
-            return schema.dump(model_object)
-        else:
-            return {}, 404
+        return self.__service__.get_model_by_id(id)
 
     def delete(self, id: UUID):
         """
@@ -64,7 +57,7 @@ class BaseRestAPIById(BaseAPI):
         :param id: The id of the resource on DB.
         :return: bool
         """
-        return {'response': self.__service__.delete_model_by_id(id)}
+        return self.__service__.delete_model_by_id(id)
 
 
 class BaseRestAPI(BaseAPI):
@@ -85,42 +78,28 @@ class BaseRestAPI(BaseAPI):
     init_every_request = False
     __view_name_suffix__ = ''
 
-    def __init__(self, model: BaseModel, schema: BaseSchema, service: BaseService.__class__):
+    def __init__(self, service: BaseService):
         """
         Initiate the object.
 
         :param model: Model to use in methods.
         :param schema: Schema to use in serialization/deserialization.
         """
-        self.__model__ = model
-        self.__schema__ = schema
-        self.__service__ = service(model)
+        self.__service__ = service
 
     def post(self):
         """
         HTTP POST, create the resource by given data in request body.
         :return: Serialized presentation of the resource
         """
-        load_schema = self.__schema__(exclude=('id', 'created', 'updated', 'active'))
-        dump_schema = self.__schema__()
-        try:
-            model_object = load_schema.load(request.json)
-        except ValidationError as err:
-            return err.messages
-        return dump_schema.dump(self.__service__.create_model(model_object))
+        return self.__service__.create_model(request.get_json())
 
     def put(self):
         """
         HTTP PUT, update the resource by given data in request body.
         :return: Serialized presentation of the resource
         """
-        load_schema = self.__schema__(exclude=('created', 'updated'))
-        dump_schema = self.__schema__()
-        try:
-            model_object = load_schema.load(request.json)
-        except ValidationError as err:
-            return err.messages, 400
-        return dump_schema.dump(self.__service__.update_model(model_object))
+        return self.__service__.update_model(request.get_json())
 
     def get(self):
         """
@@ -137,8 +116,7 @@ class BaseRestAPI(BaseAPI):
             print(err)
             page = 1
             limit = 10
-        dump_schema = self.__schema__()
-        return dump_schema.dump(self.__service__.get_all_models(limit=limit, page=page), many=True)
+        return self.__service__.get_all_models(limit=limit, page=page)
 
 
 class BaseRestAPIRelationshipByModelId(BaseAPI):
@@ -158,8 +136,7 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
     init_every_request = False
     __view_name_suffix__ = 'ByModelId'
 
-    def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
-                 sub_resource_key: str, service: BaseService.__class__, many: bool = True):
+    def __init__(self, sub_resource_key: str, service: BaseService):
         """
         Initiate the object.
 
@@ -169,12 +146,8 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         :param sub_resource_key: The attribute name of the sub-resource on model (i.e model.key).
         :param many: Indicating if the relationship is with a single object or a collection of objects.
         """
-        self.__model__ = model
-        self.__sub_resource__ = sub_resource
-        self.__sub_resource_schema__ = sub_resource_schema
         self.__sub_resource_key__ = sub_resource_key
-        self.__service__ = service(model)
-        self.__many__ = many
+        self.__service__ = service
 
     def get(self, id: UUID):
         """
@@ -185,8 +158,7 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         :param id: The id of the resource (model) on DB.
         :return: Serialized presentation of the sub-resource(s)
         """
-        schema = self.__sub_resource_schema__()
-        return schema.dump(self.__service__.get_sub_model(id, self.__sub_resource_key__), many=self.__many__)
+        return self.__service__.get_sub_model(id, self.__sub_resource_key__)
 
     def put(self, id: UUID):
         """
@@ -198,13 +170,8 @@ class BaseRestAPIRelationshipByModelId(BaseAPI):
         :param id: The id of the resource (model) on DB.
         :return: Serialized presentation of the sub-resource(s)
         """
-        dump_schema = self.__sub_resource_schema__()
-        load_schema = self.__sub_resource_schema__(only=['id'], many=self.__many__)
-        sub_resource_list = load_schema.load(request.json, many=self.__many__)
 
-        return dump_schema.dump(
-            self.__service__.create_sub_model(id, sub_resource_list, self.__sub_resource_key__, self.__many__),
-            many=self.__many__)
+        return self.__service__.create_sub_model(id, request.get_json(), self.__sub_resource_key__)
 
 
 class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
@@ -224,14 +191,9 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
     init_every_request = False
     __view_name_suffix__ = 'ByModeIdBySubResourceId'
 
-    def __init__(self, model: BaseModel, sub_resource: BaseModel, sub_resource_schema: BaseSchema,
-                 sub_resource_key: str, service: BaseService.__class__, many: bool = True):
-        self.__model__ = model
-        self.__sub_resource__ = sub_resource
-        self.__sub_resource_schema__ = sub_resource_schema
+    def __init__(self, sub_resource_key: str, service: BaseService):
         self.__sub_resource_key__ = sub_resource_key
-        self.__service__ = service(model)
-        self.__many__ = many
+        self.__service__ = service
 
     def get(self, model_id: UUID, sub_resource_id: UUID):
         """
@@ -243,9 +205,7 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
         :param sub_resource_id: The id of the sub-resource on DB.
         :return: Serialized presentation of the sub-resource
         """
-        dump_schema = self.__sub_resource_schema__()
-        return dump_schema.dump(
-            self.__service__.get_sub_model_by_id(model_id, sub_resource_id, self.__sub_resource_key__, self.__many__))
+        return self.__service__.get_sub_model_by_id(model_id, sub_resource_id, self.__sub_resource_key__)
 
     def delete(self, model_id: UUID, sub_resource_id: UUID):
         """
@@ -257,5 +217,4 @@ class BaseRestAPIRelationshipByModelIdBySubResourceId(BaseAPI):
         :param sub_resource_id: The id of the sub-resource on DB.
         :return: bool
         """
-        return self.__service__.delete_sub_model_by_id(model_id, sub_resource_id, self.__sub_resource_key__,
-                                                       self.__many__)
+        return self.__service__.delete_sub_model_by_id(model_id, sub_resource_id, self.__sub_resource_key__)
