@@ -2,11 +2,6 @@ import pytest
 
 from app import Test
 from app import create_app
-from app.models.log import IncomingAPI
-from app.blueprints.api import BaseRestAPIById
-from app.blueprints.api import BaseRestAPI
-from app.blueprints.api import BaseRestAPIRelationshipByModelId
-from app.blueprints.api import BaseRestAPIRelationshipByModelIdBySubResourceId
 from app.extensions import db
 from app.extensions import ma
 from test.models.example import SingleParent
@@ -15,7 +10,6 @@ from test.models.example import Child
 from test.models.example import ChildSchema
 from app.blueprints.service import BaseService
 from app import register_api
-from app import generate_view_name
 
 
 @pytest.fixture()

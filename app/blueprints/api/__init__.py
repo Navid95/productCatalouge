@@ -2,10 +2,6 @@ from uuid import UUID
 
 from flask.views import MethodView
 from flask import request
-from marshmallow import ValidationError
-
-from app.models import BaseModel
-from app.models import BaseSchema
 from app.blueprints.service import BaseService
 
 
