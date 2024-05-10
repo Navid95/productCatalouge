@@ -6,6 +6,7 @@ from flask import Flask
 
 from app.utilities.logging import configuration
 from app.utilities.logging.api_log import log_api_call, get_request_time
+from app.utilities.exceptions import register_handlers
 from app import blueprints
 from app.config import Development, Test, Production
 from app.models import BaseSchema
@@ -35,6 +36,7 @@ def create_app(name, config=Development):
     app = register_blueprints(app)
     app = register_apis(app)
     app = register_app_hooks(app)
+    register_handlers(app)
     return app
 
 
