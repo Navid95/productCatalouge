@@ -14,7 +14,7 @@ from app import register_api
 
 @pytest.fixture()
 def app():
-    app = create_app(__name__, Test)
+    app = create_app(__name__, Test, False)
 
     """
     Sample for generating Schemas
