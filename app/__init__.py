@@ -11,6 +11,10 @@ from app import blueprints
 from app.config import Development, Test, Production
 from app.models import BaseSchema
 from app.models import BaseModel
+from app.models.product.product import Product
+from app.models.product.product import ProductSchema
+from app.models.product.product import Category
+from app.models.product.product import CategorySchema
 from app.models.log import IncomingAPI
 from app.blueprints.api import BaseAPI
 from app.blueprints.api import BaseRestAPI
@@ -51,6 +55,48 @@ def register_extensions(app):
 
 
 def register_apis(app):
+    product_schema_ = ProductSchema.from_dict(
+        {
+            'links': ma.Hyperlinks(
+                [
+                    {
+                        'href': ma.URLFor(f'productsById', values=dict(id='<id>')),
+                        'rel': 'self',
+                        'type': 'GET'
+                    },
+                    {
+                        'href': ma.URLFor('productscategoriesByModelId', values=dict(id='<id>')),
+                        'rel': 'parent',
+                        'type': 'GET'
+                    }
+                ],
+                dump_only=True
+            )
+        }
+    )
+
+    category_schema_ = CategorySchema.from_dict(
+        {
+            'links': ma.Hyperlinks(
+                [
+                    {
+                        'href': ma.URLFor(f'categoriesById', values=dict(id='<id>')),
+                        'rel': 'self',
+                        'type': 'GET'
+                    },
+                    {
+                        'href': ma.URLFor(f'categoriesproductsByModelId', values=dict(id='<id>')),
+                        'rel': 'products',
+                        'type': 'GET'
+                    }
+                ],
+                dump_only=True
+            )
+        }
+    )
+    register_api(app, Product, product_schema_, BaseService, [(Category, CategorySchema, 'categories', True)])
+    register_api(app, Category, category_schema_, BaseService, [(Product, ProductSchema, 'products', True)])
+
     return app
 
 
