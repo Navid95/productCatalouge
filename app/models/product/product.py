@@ -1,10 +1,10 @@
 from typing import List
+from uuid import UUID
 
 from sqlalchemy import Table
 
 from .. import BaseModel
 from .. import BaseSchema
-
 
 from app.extensions import db
 
@@ -20,7 +20,9 @@ class Product(BaseModel):
     name: db.Mapped[str] = db.mapped_column(db.String, nullable=False)
     code: db.Mapped[str] = db.mapped_column(db.String, nullable=False, index=True)
     description: db.Mapped[str] = db.mapped_column(db.String)
-
+    parent_id: db.Mapped[UUID] = db.mapped_column(db.ForeignKey('product.id'), nullable=True)
+    parent: db.Mapped['Product'] = db.relationship(
+        primaryjoin="and_(Product.id == Product.parent_id, Product.active)")
     categories: db.Mapped[List['Category']] = db.relationship(
         secondary=product_category,
         primaryjoin='and_(Product.id == product_category.c.product_id, Product.active)',
