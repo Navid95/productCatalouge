@@ -60,6 +60,12 @@ def register_blueprints(app):
                         'type': 'GET'
                     },
                     {
+                        'href': ma.URLFor(f'{generate_view_name(BaseRestAPIById, ProductSchema, blueprint=product_v1)}',
+                                          values=dict(id='<parent_id>')),
+                        'rel': 'parent',
+                        'type': 'GET'
+                    },
+                    {
                         'href': ma.URLFor(
                             f'{generate_view_name(BaseRestAPIRelationshipByModelId, ProductSchema, relation=(Category, CategorySchema, "categories", True), blueprint=product_v1)}',
                             values=dict(id='<id>')),
