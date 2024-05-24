@@ -19,7 +19,10 @@ product_category = Table(
 class Product(BaseModel):
     name: db.Mapped[str] = db.mapped_column(db.String, nullable=False)
     code: db.Mapped[str] = db.mapped_column(db.String, nullable=False, index=True)
-    description: db.Mapped[str] = db.mapped_column(db.String)
+    description: db.Mapped[str]
+    base_price: db.Mapped[float]
+    vat_price: db.Mapped[float]
+
     parent_id: db.Mapped[UUID] = db.mapped_column(db.ForeignKey('product.id'), nullable=True)
     parent: db.Mapped['Product'] = db.relationship(
         primaryjoin="and_(Product.id == Product.parent_id, Product.active)")
