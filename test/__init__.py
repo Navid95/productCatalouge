@@ -1,7 +1,9 @@
 import pytest
 
+from flask import Flask
+
 from app import Test
-from app import create_app
+from app import initiate_app
 from app.extensions import db
 from app.extensions import ma
 from test.models.example import SingleParent
@@ -14,7 +16,8 @@ from app import register_api
 
 @pytest.fixture()
 def app():
-    app = create_app(__name__, Test, False)
+    app = Flask(__name__)
+    app = initiate_app(app, Test, False)
 
     """
     Sample for generating Schemas

@@ -34,9 +34,8 @@ configurations = [Development, Test, Production]
 logger = logging.getLogger(APP_LOGGER_NAME)
 
 
-def create_app(name, config=Development, register_bps: bool = True):
+def initiate_app(app: Flask, config=Development, register_bps: bool = True):
     logger.info('initializing the flask app ...')
-    app = Flask(import_name=name)
     app.config.from_object(config)
     app.config.from_pyfile('environ.py')
     app = register_extensions(app)
